@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">ComposeUiPlayground</string>
+
+    <!--  Instagram feature  -->
+    <string name="instagram_your_avatar_description">Your avatar</string>
+    <string name="instagram_avatar_description">Avatar of %1$s</string>
+    <string name="instagram_add_story">Add a new story</string>
+
 </resources>

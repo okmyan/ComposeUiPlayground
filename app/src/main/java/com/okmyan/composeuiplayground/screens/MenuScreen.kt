@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun MenuScreen(
+    onGoToInstagram: () -> Unit,
     onGoToA: () -> Unit,
     onGoToB: () -> Unit,
     onGoToC: () -> Unit,
@@ -22,6 +23,10 @@ fun MenuScreen(
         verticalArrangement = Arrangement.spacedBy(30.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Button(onClick = onGoToInstagram) {
+            Text(text = "Go to Instagram")
+        }
+
         Button(onClick = onGoToA) {
             Text(text = "Go to A")
         }

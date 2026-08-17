@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.okmyan.composeuiplayground.features.instagram.InstagramScreen
 import com.okmyan.composeuiplayground.screens.AScreen
 import com.okmyan.composeuiplayground.screens.BScreen
 import com.okmyan.composeuiplayground.screens.CScreen
@@ -28,15 +29,19 @@ fun ComposeUiPlaygroundNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Menu,
+        startDestination = Instagram,
         modifier = modifier
     ) {
         composable<Menu> {
             MenuScreen(
+                onGoToInstagram = { navController.navigate(Instagram) },
                 onGoToA = { navController.navigate(A) },
                 onGoToB = { navController.navigate(B) },
                 onGoToC = { navController.navigate(C) },
             )
+        }
+        composable<Instagram> {
+            InstagramScreen()
         }
         composable<A> {
             AScreen()
