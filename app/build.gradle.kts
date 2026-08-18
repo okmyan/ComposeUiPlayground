@@ -53,11 +53,15 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.material.icons.extended)
+
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
+    implementation(libs.koin.compose.navigation3)
 
     implementation(libs.kotlinx.collections.immutable)
 

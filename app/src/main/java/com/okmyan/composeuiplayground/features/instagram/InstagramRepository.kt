@@ -27,7 +27,7 @@ class InstagramRepository {
             id = 4L,
             title = "Stephan123",
             avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = true,
+            hasStory = false,
             usersAvatar = false,
         ),
         StoryState(
@@ -41,7 +41,7 @@ class InstagramRepository {
             id = 6L,
             title = "vasilii_d",
             avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = true,
+            hasStory = false,
             usersAvatar = false,
         ),
         StoryState(
@@ -55,7 +55,7 @@ class InstagramRepository {
             id = 8L,
             title = "peppi",
             avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = false,
+            hasStory = true,
             usersAvatar = false,
         ),
         StoryState(
@@ -76,7 +76,7 @@ class InstagramRepository {
             id = 11L,
             title = "cutORcrap",
             avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = false,
+            hasStory = true,
             usersAvatar = false,
         ),
         StoryState(
@@ -86,5 +86,8 @@ class InstagramRepository {
             hasStory = false,
             usersAvatar = false,
         ),
+    ).sortedWith(
+        compareByDescending<StoryState> { it.usersAvatar }
+            .thenByDescending { it.hasStory }
     )
 }

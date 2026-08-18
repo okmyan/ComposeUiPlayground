@@ -35,11 +35,11 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.ui.theme.PurpleGrey40
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun InstagramScreen(
-    viewModel: InstagramViewModel = koinViewModel(),
+    viewModel: InstagramViewModel,
+    onGoToStory: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -57,7 +57,7 @@ fun InstagramScreen(
                 Story(
                     storyState = story,
                     onClick = {
-                        Toast.makeText(context, "click", Toast.LENGTH_SHORT).show()
+                        onGoToStory(story.id)
                     },
                     onAddStory = {
                         Toast.makeText(context, "add", Toast.LENGTH_SHORT).show()
