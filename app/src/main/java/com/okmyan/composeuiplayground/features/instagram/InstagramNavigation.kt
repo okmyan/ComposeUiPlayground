@@ -39,27 +39,53 @@ fun InstagramNavDisplay(
 ) {
     val viewModel: InstagramViewModel = koinViewModel()
 
-    val entryProvider = entryProvider {
-        entry<Instagram> {
-            InstagramScreen(
-                viewModel = viewModel,
-                onGoToStory = { id ->
-                    navigator.navigate(InstagramStory(id))
-                }
-            )
-        }
-        entry<InstagramStory> { instagramStory ->
-            InstagramStoryScreen(
-                viewModel = viewModel,
-                id = instagramStory.storyId,
-            )
+    val entryProvider = remember(viewModel, navigator) {
+        entryProvider {
+            entry<Instagram> {
+                InstagramScreen(
+                    viewModel = viewModel,
+                    onGoToStory = { storyId ->
+                        navigator.navigateToStoryId(storyId)
+                    }
+                )
+            }
+            entry<InstagramStory> { instagramStory ->
+                InstagramStoryScreen(
+                    id = instagramStory.storyId,
+                    viewModel = viewModel,
+                    hasPreviousStory = viewModel.hasPreviousStory(instagramStory.storyId),
+                    onGoToPrevious = {
+                        val previousStoryId = viewModel.getPreviousStoryId(instagramStory.storyId)
+                        navigator.navigateToStoryId(previousStoryId)
+
+                    },
+                    onGoToNext = {
+                        val nextStoryId = viewModel.getNextStoryId(instagramStory.storyId)
+                        navigator.navigateToStoryId(nextStoryId)
+                    }
+                )
+            }
         }
     }
 
     NavDisplay(
         entries = navigator.state.toEntries(entryProvider),
         modifier = modifier,
-        onBack = { navigator.goBack() },
+        onBack = {
+            if (navigator.isRouteOnTopOfBackStack(Instagram)) {
+                navigator.goBack()
+            } else {
+                navigator.resetStack()
+            }
+        },
         sceneStrategies = remember { listOf(DialogSceneStrategy()) },
     )
+}
+
+private fun Navigator<Route>.navigateToStoryId(storyId: Long?) {
+    if (storyId != null) {
+        navigate(InstagramStory(storyId), unique = true)
+    } else {
+        resetStack()
+    }
 }

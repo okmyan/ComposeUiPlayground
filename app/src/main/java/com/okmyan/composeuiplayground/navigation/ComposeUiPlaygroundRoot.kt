@@ -20,10 +20,10 @@ import com.okmyan.composeuiplayground.screens.MenuScreen
 
 @Composable
 fun ComposeUiPlaygroundRoot(modifier: Modifier = Modifier) {
-    val topLevelRoutes = setOf<Route>(Menu)
+    val topLevelRoutes = setOf<Route>(InstagramGraph)
 
     val navigationState = rememberNavigationState(
-        startRoute = Menu,
+        startRoute = InstagramGraph,
         topLevelRoutes = topLevelRoutes,
     )
 
