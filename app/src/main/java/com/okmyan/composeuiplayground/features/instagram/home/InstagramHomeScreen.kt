@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram
+package com.okmyan.composeuiplayground.features.instagram.home
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -37,9 +37,9 @@ import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.ui.theme.PurpleGrey40
 
 @Composable
-fun InstagramScreen(
-    viewModel: InstagramViewModel,
-    onGoToStory: (Long) -> Unit,
+fun InstagramHomeScreen(
+    viewModel: InstagramHomeViewModel,
+    onGoToStories: (UserWithStories) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -53,11 +53,11 @@ fun InstagramScreen(
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             modifier = Modifier.padding(10.dp)
         ) {
-            items(state.stories) { story ->
+            items(state.usersWithStories) { userWithStories ->
                 Story(
-                    storyState = story,
+                    userWithStories = userWithStories,
                     onClick = {
-                        onGoToStory(story.id)
+                        onGoToStories(userWithStories)
                     },
                     onAddStory = {
                         Toast.makeText(context, "add", Toast.LENGTH_SHORT).show()
@@ -79,7 +79,7 @@ fun InstagramScreen(
 
 @Composable
 fun Story(
-    storyState: StoryState,
+    userWithStories: UserWithStories,
     onClick: () -> Unit,
     onAddStory: () -> Unit,
     modifier: Modifier = Modifier,
@@ -90,21 +90,23 @@ fun Story(
         modifier = modifier,
     ) {
         AvatarCircle(
-            storyState = storyState,
+            user = userWithStories.user,
+            hasStories = userWithStories.hasStories,
             onClick = onClick,
             onAddStory = onAddStory,
         )
 
-        Text(text = storyState.title)
+        Text(text = userWithStories.user.username)
     }
 }
 
 @Composable
 fun AvatarCircle(
-    storyState: StoryState,
+    user: User,
+    hasStories: Boolean,
     onClick: () -> Unit,
     onAddStory: () -> Unit,
-) = storyState.run {
+) = user.run {
     Box {
         val brush = Brush.linearGradient(
             colors = listOf(
@@ -117,7 +119,7 @@ fun AvatarCircle(
             modifier = Modifier
                 .size(100.dp)
                 .then(
-                    other = if (hasStory) {
+                    other = if (hasStories) {
                         Modifier.border(
                             width = 3.dp,
                             brush = brush,
@@ -127,10 +129,10 @@ fun AvatarCircle(
 
                 )
         ) {
-            val contentDescription = if (usersAvatar) {
+            val contentDescription = if (isCurrentUser) {
                 stringResource(R.string.instagram_your_avatar_description)
             } else {
-                stringResource(R.string.instagram_avatar_description, title)
+                stringResource(R.string.instagram_avatar_description, username)
             }
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -143,11 +145,11 @@ fun AvatarCircle(
                     .size(83.dp)
                     .border(0.2.dp, PurpleGrey40, CircleShape)
                     .clip(CircleShape)
-                    .clickable(enabled = hasStory, onClick = onClick),
+                    .clickable(enabled = hasStories, onClick = onClick),
             )
         }
 
-        if (usersAvatar) {
+        if (isCurrentUser) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = stringResource(R.string.instagram_add_story),

@@ -1,93 +1,174 @@
 package com.okmyan.composeuiplayground.features.instagram
 
+import com.okmyan.composeuiplayground.features.instagram.home.Story
+import com.okmyan.composeuiplayground.features.instagram.home.User
+import com.okmyan.composeuiplayground.features.instagram.home.UserWithStories
+import kotlinx.collections.immutable.persistentListOf
+
 class InstagramRepository {
-    val stories = listOf(
-        StoryState(
-            id = 1L,
-            title = "Your story",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = false,
-            usersAvatar = true,
+
+    val usersWithStories = listOf(
+        UserWithStories(
+            user = User(
+                id = 1L,
+                username = "Your story",
+                isCurrentUser = true,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(),
         ),
-        StoryState(
-            id = 2L,
-            title = "anna2020",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = true,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 2L,
+                username = "anna2020",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(
+                Story(
+                    id = 1,
+                    publishedAt = "4h",
+                    isSeen = false,
+                ),
+            ),
         ),
-        StoryState(
-            id = 3L,
-            title = "alex_wow",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = true,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 3L,
+                username = "alex_wow",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(
+                Story(
+                    id = 2,
+                    publishedAt = "5h",
+                    isSeen = false,
+                ),
+                Story(
+                    id = 3,
+                    publishedAt = "6h",
+                    isSeen = false,
+                ),
+            ),
         ),
-        StoryState(
-            id = 4L,
-            title = "Stephan123",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = false,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 4L,
+                username = "Stephan123",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(),
         ),
-        StoryState(
-            id = 5L,
-            title = "Devil666",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = true,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 5L,
+                username = "Devil666",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(
+                Story(
+                    id = 4,
+                    publishedAt = "1h",
+                    isSeen = false,
+                ),
+            ),
         ),
-        StoryState(
-            id = 6L,
-            title = "vasilii_d",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = false,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 6L,
+                username = "vasilii_d",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(),
         ),
-        StoryState(
-            id = 7L,
-            title = "shar_228",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = true,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 7L,
+                username = "shar_228",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(
+                Story(
+                    id = 5,
+                    publishedAt = "40m",
+                    isSeen = false,
+                ),
+                Story(
+                    id = 6,
+                    publishedAt = "45m",
+                    isSeen = false,
+                ),
+                Story(
+                    id = 7,
+                    publishedAt = "3h",
+                    isSeen = false,
+                ),
+            ),
         ),
-        StoryState(
-            id = 8L,
-            title = "peppi",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = true,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 8L,
+                username = "peppi",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(
+                Story(
+                    id = 8,
+                    publishedAt = "1h",
+                    isSeen = false,
+                ),
+            ),
         ),
-        StoryState(
-            id = 9L,
-            title = "amazing_man",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = false,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 9L,
+                username = "amazing_man",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(),
         ),
-        StoryState(
-            id = 10L,
-            title = "vesna",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = false,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 10L,
+                username = "vesna",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(),
         ),
-        StoryState(
-            id = 11L,
-            title = "cutORcrap",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = true,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 11L,
+                username = "cutORcrap",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(
+                Story(
+                    id = 9,
+                    publishedAt = "24h",
+                    isSeen = false,
+                ),
+            ),
         ),
-        StoryState(
-            id = 12L,
-            title = "Stanislau_ll",
-            avatarPreviewUrl = "https://picsum.photos/500",
-            hasStory = false,
-            usersAvatar = false,
+        UserWithStories(
+            user = User(
+                id = 12L,
+                username = "Stanislau_ll",
+                isCurrentUser = false,
+                avatarPreviewUrl = "https://picsum.photos/500",
+            ),
+            stories = persistentListOf(),
         ),
     ).sortedWith(
-        compareByDescending<StoryState> { it.usersAvatar }
-            .thenByDescending { it.hasStory }
+        compareByDescending<UserWithStories> { it.user.isCurrentUser }
+            .thenByDescending { it.hasStories }
     )
 }

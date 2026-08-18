@@ -6,6 +6,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
+import com.okmyan.composeuiplayground.features.instagram.home.InstagramHomeScreen
+import com.okmyan.composeuiplayground.features.instagram.home.InstagramHomeViewModel
+import com.okmyan.composeuiplayground.features.instagram.home.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.story.InstagramStoryScreen
 import com.okmyan.composeuiplayground.navigation.Navigator
 import com.okmyan.composeuiplayground.navigation.Route
 import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.Instagram
@@ -37,31 +41,30 @@ fun InstagramNavDisplay(
     navigator: Navigator<Route>,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: InstagramViewModel = koinViewModel()
+    val viewModel: InstagramHomeViewModel = koinViewModel()
 
     val entryProvider = remember(viewModel, navigator) {
         entryProvider {
             entry<Instagram> {
-                InstagramScreen(
+                InstagramHomeScreen(
                     viewModel = viewModel,
-                    onGoToStory = { storyId ->
-                        navigator.navigateToStoryId(storyId)
+                    onGoToStories = { user ->
+                        navigator.navigateToUserStory(user)
                     }
                 )
             }
             entry<InstagramStory> { instagramStory ->
                 InstagramStoryScreen(
-                    id = instagramStory.storyId,
+                    userWithStories = instagramStory.userWithStories,
                     viewModel = viewModel,
-                    hasPreviousStory = viewModel.hasPreviousStory(instagramStory.storyId),
+                    hasPreviousStory = viewModel.isItFirstUserInHighlights(instagramStory.userWithStories),
                     onGoToPrevious = {
-                        val previousStoryId = viewModel.getPreviousStoryId(instagramStory.storyId)
-                        navigator.navigateToStoryId(previousStoryId)
-
+                        val previousUser = viewModel.getPreviousUserWithStories(instagramStory.userWithStories)
+                        navigator.navigateToUserStory(previousUser)
                     },
                     onGoToNext = {
-                        val nextStoryId = viewModel.getNextStoryId(instagramStory.storyId)
-                        navigator.navigateToStoryId(nextStoryId)
+                        val nextUser = viewModel.getNextUserWithStories(instagramStory.userWithStories)
+                        navigator.navigateToUserStory(nextUser)
                     }
                 )
             }
@@ -82,9 +85,9 @@ fun InstagramNavDisplay(
     )
 }
 
-private fun Navigator<Route>.navigateToStoryId(storyId: Long?) {
-    if (storyId != null) {
-        navigate(InstagramStory(storyId), unique = true)
+private fun Navigator<Route>.navigateToUserStory(userWithStories: UserWithStories?) {
+    if (userWithStories != null) {
+        navigate(InstagramStory(userWithStories), unique = true)
     } else {
         resetStack()
     }
