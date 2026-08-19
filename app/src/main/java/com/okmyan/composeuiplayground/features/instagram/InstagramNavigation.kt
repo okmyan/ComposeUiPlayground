@@ -6,26 +6,27 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
-import com.okmyan.composeuiplayground.features.instagram.home.InstagramHomeScreen
-import com.okmyan.composeuiplayground.features.instagram.home.InstagramHomeViewModel
-import com.okmyan.composeuiplayground.features.instagram.home.UserWithStories
-import com.okmyan.composeuiplayground.features.instagram.story.InstagramStoryScreen
+import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.screens.home.InstagramHomeScreen
+import com.okmyan.composeuiplayground.features.instagram.screens.home.InstagramHomeViewModel
+import com.okmyan.composeuiplayground.features.instagram.screens.story.InstagramStoryScreen
 import com.okmyan.composeuiplayground.navigation.Navigator
 import com.okmyan.composeuiplayground.navigation.Route
-import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.Instagram
-import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.InstagramStory
+import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.InstagramHome
 import com.okmyan.composeuiplayground.navigation.rememberNavigationState
 import com.okmyan.composeuiplayground.navigation.toEntries
+import com.okmyan.composeuiplayground.utils.extensions.findNext
 import org.koin.androidx.compose.koinViewModel
+import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.InstagramStory as InstagramStoryGraph
 
 @Composable
 fun InstagramNavigation(
     modifier: Modifier = Modifier,
 ) {
-    val topLevelRoutes = setOf(Instagram)
+    val topLevelRoutes = setOf(InstagramHome)
 
     val navigationState = rememberNavigationState<Route>(
-        startRoute = Instagram,
+        startRoute = InstagramHome,
         topLevelRoutes = topLevelRoutes,
     )
     val navigator = remember { Navigator(navigationState) }
@@ -45,26 +46,32 @@ fun InstagramNavDisplay(
 
     val entryProvider = remember(viewModel, navigator) {
         entryProvider {
-            entry<Instagram> {
+            entry<InstagramHome> {
                 InstagramHomeScreen(
                     viewModel = viewModel,
-                    onGoToStories = { user ->
-                        navigator.navigateToUserStory(user)
+                    onGoToStories = { user, stories ->
+                        navigator.navigateToUserStory(user, stories)
                     }
                 )
             }
-            entry<InstagramStory> { instagramStory ->
+            entry<InstagramStoryGraph> { instagramStory ->
                 InstagramStoryScreen(
                     userWithStories = instagramStory.userWithStories,
                     viewModel = viewModel,
                     hasPreviousStory = viewModel.isItFirstUserInHighlights(instagramStory.userWithStories),
                     onGoToPrevious = {
-                        val previousUser = viewModel.getPreviousUserWithStories(instagramStory.userWithStories)
-                        navigator.navigateToUserStory(previousUser)
+                        val iterator = instagramStory.stories.reversed().iterator()
+                        val previousUser =
+                            iterator.findNext { it.user.id == instagramStory.userWithStories.user.id }
+
+                        navigator.navigateToUserStory(previousUser, instagramStory.stories)
                     },
                     onGoToNext = {
-                        val nextUser = viewModel.getNextUserWithStories(instagramStory.userWithStories)
-                        navigator.navigateToUserStory(nextUser)
+                        val iterator = instagramStory.stories.iterator()
+                        val nextUser =
+                            iterator.findNext { it.user.id == instagramStory.userWithStories.user.id }
+
+                        navigator.navigateToUserStory(nextUser, instagramStory.stories)
                     }
                 )
             }
@@ -75,7 +82,7 @@ fun InstagramNavDisplay(
         entries = navigator.state.toEntries(entryProvider),
         modifier = modifier,
         onBack = {
-            if (navigator.isRouteOnTopOfBackStack(Instagram)) {
+            if (navigator.isRouteOnTopOfBackStack(InstagramHome)) {
                 navigator.goBack()
             } else {
                 navigator.resetStack()
@@ -85,9 +92,12 @@ fun InstagramNavDisplay(
     )
 }
 
-private fun Navigator<Route>.navigateToUserStory(userWithStories: UserWithStories?) {
+private fun Navigator<Route>.navigateToUserStory(
+    userWithStories: UserWithStories?,
+    usersWithStories: List<UserWithStories>,
+) {
     if (userWithStories != null) {
-        navigate(InstagramStory(userWithStories), unique = true)
+        navigate(InstagramStoryGraph(userWithStories, usersWithStories), unique = true)
     } else {
         resetStack()
     }

@@ -1,14 +1,19 @@
-package com.okmyan.composeuiplayground.features.instagram.story
+package com.okmyan.composeuiplayground.features.instagram.screens.story
 
 import androidx.lifecycle.ViewModel
-import com.okmyan.composeuiplayground.features.instagram.home.UserWithStories
+import androidx.lifecycle.viewModelScope
+import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.UpdateStoriesUseCase
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class InstagramStoryViewModel(
-    userWithStories: UserWithStories,
+    private val userWithStories: UserWithStories,
+    private val updateStoriesUseCase: UpdateStoriesUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InstagramStoryState())
@@ -25,7 +30,13 @@ class InstagramStoryViewModel(
         updateActiveStoryIndex()
     }
 
-    fun onStorySeen(seenStoryIndex: Int) {
+    fun onStorySeen(storyId: Long) {
+        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStorySeen (${userWithStories.user} $storyId)")) {
+            updateStoriesUseCase(storyId)
+        }
+    }
+
+    fun onStoryEnded(seenStoryIndex: Int) {
         val stories = uiState.value.stories.mapIndexed { index, story ->
             if (index == seenStoryIndex) {
                 story.copy(isSeen = true)
@@ -42,7 +53,7 @@ class InstagramStoryViewModel(
     private fun updateActiveStoryIndex() {
         var activeStoryIndex = 0
 
-        run breaking@ {
+        run breaking@{
             _uiState.value.stories.forEachIndexed { index, story ->
                 if (!story.isSeen) {
                     activeStoryIndex = index

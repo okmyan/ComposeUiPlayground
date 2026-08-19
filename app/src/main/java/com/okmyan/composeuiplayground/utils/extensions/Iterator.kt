@@ -1,11 +1,9 @@
 package com.okmyan.composeuiplayground.utils.extensions
 
-fun <T> Iterator<T>.findNext(element: T): T? {
+fun <T> Iterator<T>.findNext(predicate: (T) -> Boolean): T? {
     while (hasNext()) {
-        if (next() == element) {
-            if (hasNext()) {
-                return next()
-            }
+        if (predicate(next())) {
+            return if (hasNext()) next() else null
         }
     }
 

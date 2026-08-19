@@ -1,23 +1,26 @@
 package com.okmyan.composeuiplayground.navigation
 
 import androidx.navigation3.runtime.NavKey
-import com.okmyan.composeuiplayground.features.instagram.home.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface Route: NavKey {
+sealed interface Route : NavKey {
 
     @Serializable
     data object Menu : Route
 
     @Serializable
-    data object InstagramGraph: Route {
+    data object InstagramGraph : Route {
 
         @Serializable
-        data object Instagram : Route
+        data object InstagramHome : Route
 
         @Serializable
-        data class InstagramStory(val userWithStories: UserWithStories) : Route
+        data class InstagramStory(
+            val userWithStories: UserWithStories,
+            val stories: List<UserWithStories>,
+        ) : Route
     }
 
     @Serializable

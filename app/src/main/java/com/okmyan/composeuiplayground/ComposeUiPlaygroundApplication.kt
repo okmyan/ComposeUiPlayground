@@ -1,7 +1,7 @@
 package com.okmyan.composeuiplayground
 
 import android.app.Application
-import com.okmyan.composeuiplayground.di.appModule
+import com.okmyan.composeuiplayground.features.instagram.di.instagramModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.GlobalContext
@@ -19,7 +19,7 @@ class ComposeUiPlaygroundApplication : Application() {
         GlobalContext.startKoin {
             androidContext(this@ComposeUiPlaygroundApplication)
             androidLogger()
-            modules(appModule)
+            modules(instagramModule)
         }
     }
 }

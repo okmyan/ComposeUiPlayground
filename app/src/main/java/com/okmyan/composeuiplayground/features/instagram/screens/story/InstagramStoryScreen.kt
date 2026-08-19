@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.story
+package com.okmyan.composeuiplayground.features.instagram.screens.story
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,10 +35,10 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.okmyan.composeuiplayground.R
-import com.okmyan.composeuiplayground.features.instagram.home.InstagramHomeViewModel
-import com.okmyan.composeuiplayground.features.instagram.home.Story
-import com.okmyan.composeuiplayground.features.instagram.home.User
-import com.okmyan.composeuiplayground.features.instagram.home.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramStory
+import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramUser
+import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.screens.home.InstagramHomeViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -67,13 +67,18 @@ fun InstagramStoryScreen(
 
         Text(text = "This is a screen Instagram Story #${userWithStories.user.id}")
 
-        Stories(state.stories, state.activeStoryIndex, onStorySeen = {
-            if (state.isActiveStoryLastOne) {
-                onGoToNext()
-            } else {
-                storyViewModel.onStorySeen(it)
-            }
-        })
+        Stories(
+            stories = state.stories,
+            activeStoryIndex = state.activeStoryIndex,
+            onStorySeen = storyViewModel::onStorySeen,
+            onStoryEnded = {
+                if (state.isActiveStoryLastOne) {
+                    onGoToNext()
+                } else {
+                    storyViewModel.onStoryEnded(it)
+                }
+            },
+        )
 
         Row(
             modifier = modifier.fillMaxWidth(),
@@ -93,7 +98,7 @@ fun InstagramStoryScreen(
 }
 
 @Composable
-fun Header(user: User, activeStory: Story) {
+fun Header(user: InstagramUser, activeStory: InstagramStory) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -105,7 +110,12 @@ fun Header(user: User, activeStory: Story) {
         ) {
             Avatar(user)
 
-            Text(text = user.username, fontWeight = FontWeight.Bold)
+            val title = if (user.isCurrentUser) {
+                stringResource(R.string.instagram_your_story)
+            } else {
+                user.username
+            }
+            Text(text = title, fontWeight = FontWeight.Bold)
 
             Text(text = activeStory.publishedAt)
         }
@@ -119,7 +129,7 @@ fun Header(user: User, activeStory: Story) {
 }
 
 @Composable
-fun Avatar(user: User) = user.run {
+fun Avatar(user: InstagramUser) = user.run {
     val contentDescription = if (isCurrentUser) {
         stringResource(R.string.instagram_your_avatar_description)
     } else {
@@ -140,9 +150,10 @@ fun Avatar(user: User) = user.run {
 
 @Composable
 fun Stories(
-    stories: ImmutableList<Story>,
+    stories: ImmutableList<InstagramStory>,
     activeStoryIndex: Int,
-    onStorySeen: (Int) -> Unit
+    onStorySeen: (Long) -> Unit,
+    onStoryEnded: (Int) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -154,8 +165,11 @@ fun Stories(
                 modifier = Modifier.weight(1f),
                 isLoaded = story.isSeen,
                 isActive = index == activeStoryIndex,
+                onStart = {
+                    onStorySeen(story.id)
+                },
                 onStop = {
-                    onStorySeen(index)
+                    onStoryEnded(index)
                 }
             )
             Spacer(Modifier.width(2.dp))
@@ -168,6 +182,7 @@ fun LinearDeterminateIndicator(
     modifier: Modifier,
     isLoaded: Boolean,
     isActive: Boolean,
+    onStart: () -> Unit,
     onStop: () -> Unit,
 ) {
     val initialValue = if (isLoaded) 1f else 0f
@@ -177,6 +192,7 @@ fun LinearDeterminateIndicator(
     LaunchedEffect(isActive) {
         if (isActive) {
             scope.launch {
+                onStart()
                 loadProgress { progress ->
                     currentProgress = progress
                 }
