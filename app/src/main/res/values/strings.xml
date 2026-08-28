@@ -12,5 +12,6 @@
     <string name="instagram_story_message_sent">Message sent</string>
     <string name="instagram_story_favorite">Like the story</string>
     <string name="instagram_story_options">Options</string>
+    <string name="instagram_story_retry">Retry loading the story</string>
 
 </resources>
