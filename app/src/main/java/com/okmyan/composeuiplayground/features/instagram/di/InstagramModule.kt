@@ -3,7 +3,8 @@ package com.okmyan.composeuiplayground.features.instagram.di
 import com.okmyan.composeuiplayground.features.instagram.data.StoriesRepository
 import com.okmyan.composeuiplayground.features.instagram.data.UsersRepository
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetUsersWithStoriesUseCase
-import com.okmyan.composeuiplayground.features.instagram.domain.usecases.UpdateStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.screens.home.InstagramHomeViewModel
 import com.okmyan.composeuiplayground.features.instagram.screens.story.InstagramStoryViewModel
 import org.koin.core.module.dsl.factoryOf
@@ -17,13 +18,15 @@ val instagramModule = module {
     singleOf(::StoriesRepository)
 
     factoryOf(::GetUsersWithStoriesUseCase)
-    factoryOf(::UpdateStoriesUseCase)
+    factoryOf(::SeeStoriesUseCase)
+    factoryOf(::LikeStoriesUseCase)
 
     viewModelOf(::InstagramHomeViewModel)
     viewModel { params ->
         InstagramStoryViewModel(
             userWithStories = params.get(),
-            updateStoriesUseCase = get(),
+            seeStoriesUseCase = get(),
+            likeStoriesUseCase = get(),
         )
     }
 }

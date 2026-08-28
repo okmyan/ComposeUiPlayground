@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +40,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.okmyan.composeuiplayground.R
@@ -49,14 +49,15 @@ import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithSt
 import com.okmyan.composeuiplayground.ui.theme.PurpleGrey40
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun InstagramHomeScreen(
-    viewModel: InstagramHomeViewModel,
+    viewModel: InstagramHomeViewModel = koinViewModel(),
     onGoToStories: (UserWithStories, List<UserWithStories>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -67,7 +68,7 @@ fun InstagramHomeScreen(
         onRefresh = {
             coroutineScope.launch {
                 isRefreshing = true
-                delay(2000)
+                delay(1000)
                 isRefreshing = false
             }
         },
@@ -191,8 +192,8 @@ fun AvatarCircle(
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(avatarPreviewUrl)
-                    .memoryCacheKey(id.toString())
-                    .diskCacheKey(id.toString())
+                    .memoryCacheKey("user_${id}")
+                    .diskCacheKey("user_${id}")
                     .build(),
                 contentDescription = contentDescription,
                 modifier = Modifier

@@ -1,26 +1,22 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.story
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -28,195 +24,150 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.okmyan.composeuiplayground.R
-import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramStory
-import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramUser
 import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
-import com.okmyan.composeuiplayground.features.instagram.screens.home.InstagramHomeViewModel
-import kotlinx.collections.immutable.ImmutableList
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Header
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.MessageTextField
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Stories
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Tail
+import com.okmyan.composeuiplayground.utils.extensions.clearFocusOnTap
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import timber.log.Timber
 
 @Composable
 fun InstagramStoryScreen(
     userWithStories: UserWithStories,
-    viewModel: InstagramHomeViewModel,
-    storyViewModel: InstagramStoryViewModel = koinViewModel { parametersOf(userWithStories) },
+    viewModel: InstagramStoryViewModel = koinViewModel {
+        parametersOf(userWithStories)
+    },
     hasPreviousStory: Boolean,
     onGoToPrevious: () -> Unit,
     onGoToNext: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val state by storyViewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val enteredMessage = state.enteredMessage
 
-    Column(
+    var isMessageEditing by remember { mutableStateOf(false) }
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (isMessageEditing) 0.3f else 0f,
+        animationSpec = tween(300),
+    )
+
+    Timber.d("alpha: $contentAlpha")
+    val messageFieldModifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)
+
+    val focusManager = LocalFocusManager.current
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(10.dp),
-        verticalArrangement = Arrangement.Top,
+            .clearFocusOnTap(focusManager),
+        contentAlignment = Alignment.BottomCenter,
     ) {
-        Header(state.user, state.activeStory)
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
+                Stories(
+                    stories = state.stories,
+                    activeStoryIndex = state.activeStoryIndex,
+                    onStorySeen = viewModel::onStorySeen,
+                    isContinuous = !isMessageEditing,
+                    onStoryEnded = {
+                        if (state.isActiveStoryLastOne) {
+                            onGoToNext()
+                        } else {
+                            viewModel.onStoryEnded(it)
+                        }
+                    },
+                )
+                Header(
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 20.dp
+                    ),
+                    user = state.user, activeStory = state.activeStory,
+                )
+            }
 
-        Text(text = "This is a screen Instagram Story #${userWithStories.user.id}")
+            if (!state.user.isCurrentUser) {
+                Tail(
+                    modifier = messageFieldModifier,
+                    onMessageEditing = { isMessageEditing = true },
+                    message = enteredMessage.text,
+                    isLiked = state.activeStory.isLiked,
+                    onLike = { viewModel.onStoryLiked(state.activeStory.id) },
+                )
+            }
+        }
 
-        Stories(
-            stories = state.stories,
-            activeStoryIndex = state.activeStoryIndex,
-            onStorySeen = storyViewModel::onStorySeen,
-            onStoryEnded = {
-                if (state.isActiveStoryLastOne) {
-                    onGoToNext()
-                } else {
-                    storyViewModel.onStoryEnded(it)
-                }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = contentAlpha)),
+            contentAlignment = Alignment.Center,
+        ) {}
+
+        var showMessageSentNotification by remember { mutableStateOf(false) }
+        MessageSentNotification(showMessageSentNotification)
+
+        val scope = rememberCoroutineScope()
+        var notificationJob by remember { mutableStateOf<Job?>(null) }
+
+        MessageTextField(
+            isMessageEditing = isMessageEditing,
+            message = enteredMessage,
+            onMessageChange = viewModel::onMessageChange,
+            onKeyboardHide = { isMessageEditing = false },
+            onMessageSent = {
+                viewModel.onMessageSend()
+
+                notificationJob?.cancel()
+                notificationJob =
+                    scope.launch(CoroutineName("InstagramStoryScreen - show Message sent notification")) {
+                        delay(1000)
+                        showMessageSentNotification = true
+                        delay(4000)
+                        showMessageSentNotification = false
+                    }
             },
-        )
-
-        Row(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            if (hasPreviousStory) {
-                Button(onClick = onGoToPrevious) {
-                    Text("Previous")
-                }
-            }
-
-            Button(onClick = onGoToNext) {
-                Text("Next")
-            }
-        }
-    }
-}
-
-@Composable
-fun Header(user: InstagramUser, activeStory: InstagramStory) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Avatar(user)
-
-            val title = if (user.isCurrentUser) {
-                stringResource(R.string.instagram_your_story)
-            } else {
-                user.username
-            }
-            Text(text = title, fontWeight = FontWeight.Bold)
-
-            Text(text = activeStory.publishedAt)
-        }
-
-        Icon(
-            imageVector = Icons.Default.Menu,
-            contentDescription = stringResource(R.string.instagram_story_options),
-            tint = Color.White
+            modifier = messageFieldModifier,
         )
     }
 }
 
 @Composable
-fun Avatar(user: InstagramUser) = user.run {
-    val contentDescription = if (isCurrentUser) {
-        stringResource(R.string.instagram_your_avatar_description)
-    } else {
-        stringResource(R.string.instagram_avatar_description, username)
-    }
-    AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(avatarPreviewUrl)
-            .memoryCacheKey(id.toString())
-            .diskCacheKey(id.toString())
-            .build(),
-        contentDescription = contentDescription,
-        modifier = Modifier
-            .size(35.dp)
-            .clip(CircleShape)
-    )
-}
-
-@Composable
-fun Stories(
-    stories: ImmutableList<InstagramStory>,
-    activeStoryIndex: Int,
-    onStorySeen: (Long) -> Unit,
-    onStoryEnded: (Int) -> Unit
+fun BoxScope.MessageSentNotification(
+    show: Boolean,
+    modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    AnimatedVisibility(
+        visible = show,
+        modifier = modifier.align(Alignment.Center),
+        enter = fadeIn(animationSpec = tween(500)),
+        exit = fadeOut(animationSpec = tween(500)),
     ) {
-        stories.forEachIndexed { index, story ->
-            LinearDeterminateIndicator(
-                modifier = Modifier.weight(1f),
-                isLoaded = story.isSeen,
-                isActive = index == activeStoryIndex,
-                onStart = {
-                    onStorySeen(story.id)
-                },
-                onStop = {
-                    onStoryEnded(index)
-                }
-            )
-            Spacer(Modifier.width(2.dp))
-        }
-    }
-}
-
-@Composable
-fun LinearDeterminateIndicator(
-    modifier: Modifier,
-    isLoaded: Boolean,
-    isActive: Boolean,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-) {
-    val initialValue = if (isLoaded) 1f else 0f
-    var currentProgress by remember { mutableFloatStateOf(initialValue) }
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(isActive) {
-        if (isActive) {
-            scope.launch {
-                onStart()
-                loadProgress { progress ->
-                    currentProgress = progress
-                }
-                onStop()
-            }
-        }
+        Text(
+            text = stringResource(R.string.instagram_story_message_sent),
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.Black.copy(alpha = 0.25f))
+                .padding(horizontal = 20.dp, vertical = 13.dp),
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 
-    LinearProgressIndicator(
-        progress = { currentProgress },
-        modifier = modifier,
-        gapSize = 0.dp,
-        drawStopIndicator = {}
-    )
-}
-
-/** Iterate the progress value */
-suspend fun loadProgress(updateProgress: (Float) -> Unit) {
-//    for (i in 1..400) {
-//        updateProgress(i.toFloat() / 400)
-//        delay(25)
-//    }
-    for (i in 1..100) {
-        updateProgress(i.toFloat() / 100)
-        delay(25)
-    }
 }

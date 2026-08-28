@@ -18,7 +18,7 @@ sealed interface Route : NavKey {
 
         @Serializable
         data class InstagramStory(
-            val userWithStories: UserWithStories,
+            val user: UserWithStories,
             val stories: List<UserWithStories>,
         ) : Route
     }

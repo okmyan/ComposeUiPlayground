@@ -1,9 +1,12 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.story
 
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
-import com.okmyan.composeuiplayground.features.instagram.domain.usecases.UpdateStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +16,8 @@ import timber.log.Timber
 
 class InstagramStoryViewModel(
     private val userWithStories: UserWithStories,
-    private val updateStoriesUseCase: UpdateStoriesUseCase,
+    private val seeStoriesUseCase: SeeStoriesUseCase,
+    private val likeStoriesUseCase: LikeStoriesUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InstagramStoryState())
@@ -22,9 +26,18 @@ class InstagramStoryViewModel(
     init {
         Timber.d("Init block ${userWithStories.user}")
 
+        // If the user opens the stories that already watched, we show them again
+        val stories = if (userWithStories.allStoriesSeen) {
+            userWithStories.stories.map {
+                it.copy(isSeen = false)
+            }
+        } else {
+            userWithStories.stories
+        }.toImmutableList()
+
         _uiState.value = _uiState.value.copy(
             user = userWithStories.user,
-            stories = userWithStories.stories,
+            stories = stories,
         )
 
         updateActiveStoryIndex()
@@ -32,12 +45,44 @@ class InstagramStoryViewModel(
 
     fun onStorySeen(storyId: Long) {
         viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStorySeen (${userWithStories.user} $storyId)")) {
-            updateStoriesUseCase(storyId)
+            seeStoriesUseCase(storyId)
         }
     }
 
+    fun onStoryLiked(storyId: Long) {
+        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStoryLiked (${userWithStories.user} $storyId)")) {
+            likeStoriesUseCase(storyId)
+        }
+
+        _uiState.value = _uiState.value.copy(
+            stories = _uiState.value.stories.map { story ->
+                story.copy(
+                    isLiked = if (story.id == _uiState.value.activeStory.id) {
+                        !story.isLiked
+                    } else {
+                        story.isLiked
+                    }
+                )
+            }.toImmutableList()
+        )
+    }
+
+    fun onMessageChange(message: TextFieldValue) {
+        _uiState.value = _uiState.value.copy(
+            enteredMessage = message
+        )
+    }
+
+    fun onMessageSend() {
+        Timber.d("The user sent the following message:\n${_uiState.value.enteredMessage}")
+
+        _uiState.value = _uiState.value.copy(
+            enteredMessage = TextFieldValue()
+        )
+    }
+
     fun onStoryEnded(seenStoryIndex: Int) {
-        val stories = uiState.value.stories.mapIndexed { index, story ->
+        val stories = _uiState.value.stories.mapIndexed { index, story ->
             if (index == seenStoryIndex) {
                 story.copy(isSeen = true)
             } else {
@@ -68,6 +113,6 @@ class InstagramStoryViewModel(
     }
 
     override fun onCleared() {
-        Timber.d("onCleared ${uiState.value.user}")
+        Timber.d("onCleared ${_uiState.value.user}")
     }
 }
