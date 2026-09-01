@@ -9,9 +9,19 @@
     <string name="instagram_story_content">Story of %1$s</string>
     <string name="instagram_story_send_story">Send story to someone</string>
     <string name="instagram_story_send_message">Send message</string>
-    <string name="instagram_story_message_sent">Message sent</string>
-    <string name="instagram_story_favorite">Like the story</string>
+    <string name="instagram_story_favorite_like">Like the story</string>
+    <string name="instagram_story_favorite_unlike">Unlike the story</string>
     <string name="instagram_story_options">Options</string>
+    <string name="instagram_story_options_about">About this story</string>
+    <string name="instagram_story_options_report">Report</string>
+    <string name="instagram_story_options_mute">Mute</string>
+    <string name="instagram_story_options_unmute">Unmute Story</string>
     <string name="instagram_story_retry">Retry loading the story</string>
+    <string name="instagram_story_notification_message_sent">Message sent</string>
+    <string name="instagram_story_notification_muted">Muted</string>
+    <string name="instagram_story_notification_unmuted">Unmuted</string>
+    <string name="instagram_story_notification_reported">Reported</string>
+
+    <string name="empty_string">s</string>
 
 </resources>

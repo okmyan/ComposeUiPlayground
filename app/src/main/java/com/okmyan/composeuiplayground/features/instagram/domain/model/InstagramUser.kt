@@ -8,4 +8,5 @@ data class InstagramUser(
     val username: String = "",
     val isCurrentUser: Boolean = false,
     val avatarPreviewUrl: String = "",
+    val isMuted: Boolean = false,
 )

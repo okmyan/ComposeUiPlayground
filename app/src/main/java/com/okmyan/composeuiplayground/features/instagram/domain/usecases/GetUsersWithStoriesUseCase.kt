@@ -5,7 +5,7 @@ import com.okmyan.composeuiplayground.features.instagram.data.UsersRepository
 import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 
 class GetUsersWithStoriesUseCase(
     private val usersRepository: UsersRepository,
@@ -13,20 +13,23 @@ class GetUsersWithStoriesUseCase(
 ) {
 
     operator fun invoke(): Flow<List<UserWithStories>> {
-        return storiesRepository.observeStories().map { stories ->
-            val storiesByUser = stories.groupBy { it.userId }
-            usersRepository.users.map { user ->
-                UserWithStories(
-                    user = user,
-                    stories = storiesByUser[user.id].orEmpty().toImmutableList()
-                )
+        return usersRepository.observeUsers()
+            .combine(storiesRepository.observeStories()) { users, stories ->
+                val storiesByUser = stories.groupBy { it.userId }
+
+                users.map { user ->
+                    UserWithStories(
+                        user = user,
+                        stories = storiesByUser[user.id].orEmpty().toImmutableList()
+                    )
+                }
+                    .filter { it.hasStories }
+                    .sortedWith(
+                        compareByDescending<UserWithStories> { it.user.isCurrentUser }
+                            .thenByDescending { it.hasNonSeenStories }
+                            .thenBy { it.isMuted }
+                    )
             }
-                .filter { it.hasStories }
-                .sortedWith(
-                    compareByDescending<UserWithStories> { it.user.isCurrentUser }
-                        .thenByDescending { it.hasNonSeenStories }
-                )
-        }
     }
 
 }

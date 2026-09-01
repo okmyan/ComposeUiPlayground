@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,19 +70,26 @@ fun Tail(
             )
         }
 
-        val favoriteIcon = if (isLiked) {
-            Icons.Rounded.Favorite
-        } else {
-            Icons.Rounded.FavoriteBorder
-        }
+        val haptics = LocalHapticFeedback.current
+
+        val favoriteIcon = if (isLiked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder
+        val favoriteIconContentDescriptionId =
+            if (isLiked) R.string.instagram_story_favorite_unlike else R.string.instagram_story_favorite_like
+        val favoriteIconColor = if (isLiked) Color.Red else Color.White
+
         Icon(
             imageVector = favoriteIcon,
-            contentDescription = stringResource(R.string.instagram_story_favorite),
+            contentDescription = stringResource(favoriteIconContentDescriptionId),
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .clickable(onClick = onLike),
-            tint = Color.White
+                .clickable(onClick = {
+                    if (!isLiked) {
+                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                    }
+                    onLike()
+                }),
+            tint = favoriteIconColor
         )
 
         Icon(

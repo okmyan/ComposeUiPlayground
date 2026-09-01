@@ -1,49 +1,33 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.story
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.BlackoutStory
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Header
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.MessageTextField
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Stories
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.StoryBottomSheet
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.StoryNotificationPopup
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Tail
 import com.okmyan.composeuiplayground.utils.extensions.clearFocusOnTap
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import timber.log.Timber
 
 @Composable
 fun InstagramStoryScreen(
@@ -57,24 +41,28 @@ fun InstagramStoryScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val notification by viewModel.notifications.collectAsStateWithLifecycle(StoryNotification())
+
     val enteredMessage = state.enteredMessage
 
     var isMessageEditing by remember { mutableStateOf(false) }
-    val contentAlpha by animateFloatAsState(
+    val blackoutAlpha by animateFloatAsState(
         targetValue = if (isMessageEditing) 0.3f else 0f,
         animationSpec = tween(300),
     )
 
-    Timber.d("alpha: $contentAlpha")
+    var showOptions by remember { mutableStateOf(false) }
+
+    val isStoryContinuous = !isMessageEditing && !showOptions
+
     val messageFieldModifier = Modifier
         .fillMaxWidth()
         .padding(8.dp)
 
-    val focusManager = LocalFocusManager.current
     Box(
         modifier = modifier
             .fillMaxSize()
-            .clearFocusOnTap(focusManager),
+            .clearFocusOnTap(LocalFocusManager.current),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -97,7 +85,9 @@ fun InstagramStoryScreen(
                         horizontal = 10.dp,
                         vertical = 20.dp
                     ),
-                    user = state.user, activeStory = state.activeStory,
+                    user = state.user,
+                    activeStory = state.activeStory,
+                    onOptionsClick = { showOptions = true },
                 )
             }
 
@@ -112,62 +102,26 @@ fun InstagramStoryScreen(
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = contentAlpha)),
-            contentAlignment = Alignment.Center,
-        ) {}
+        BlackoutStory(blackoutAlpha = blackoutAlpha)
 
-        var showMessageSentNotification by remember { mutableStateOf(false) }
-        MessageSentNotification(showMessageSentNotification)
+        StoryNotificationPopup(notification)
 
-        val scope = rememberCoroutineScope()
-        var notificationJob by remember { mutableStateOf<Job?>(null) }
+        if (showOptions) {
+            StoryBottomSheet(
+                isMuted = state.user.isMuted,
+                onDismiss = { showOptions = false },
+                onReport = viewModel::onReport,
+                onMute = viewModel::onMute,
+            )
+        }
 
         MessageTextField(
             isMessageEditing = isMessageEditing,
             message = enteredMessage,
             onMessageChange = viewModel::onMessageChange,
             onKeyboardHide = { isMessageEditing = false },
-            onMessageSent = {
-                viewModel.onMessageSend()
-
-                notificationJob?.cancel()
-                notificationJob =
-                    scope.launch(CoroutineName("InstagramStoryScreen - show Message sent notification")) {
-                        delay(1000)
-                        showMessageSentNotification = true
-                        delay(4000)
-                        showMessageSentNotification = false
-                    }
-            },
+            onMessageSent = viewModel::onMessageSend,
             modifier = messageFieldModifier,
         )
     }
-}
-
-@Composable
-fun BoxScope.MessageSentNotification(
-    show: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    AnimatedVisibility(
-        visible = show,
-        modifier = modifier.align(Alignment.Center),
-        enter = fadeIn(animationSpec = tween(500)),
-        exit = fadeOut(animationSpec = tween(500)),
-    ) {
-        Text(
-            text = stringResource(R.string.instagram_story_message_sent),
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color.Black.copy(alpha = 0.25f))
-                .padding(horizontal = 20.dp, vertical = 13.dp),
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
-
 }

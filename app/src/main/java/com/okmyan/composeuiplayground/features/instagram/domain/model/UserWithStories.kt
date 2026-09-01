@@ -9,6 +9,7 @@ data class UserWithStories(
     val stories: ImmutableList<InstagramStory>,
 ) {
     val userId = user.id
+    val isMuted = user.isMuted
 
     val hasStories = stories.isNotEmpty()
     val hasNonSeenStories = stories.any { !it.isSeen }

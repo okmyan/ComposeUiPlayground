@@ -49,6 +49,11 @@ import kotlin.math.max
 fun Stories(
     stories: ImmutableList<InstagramStory>,
     activeStoryIndex: Int,
+    hasPrevStory: Boolean,
+    onGoToPrevStory: () -> Unit,
+    onGoToNextStory: () -> Unit,
+    onGoToPrevUserStories: () -> Unit,
+    onGoToNextUserStories: () -> Unit,
     isContinuous: Boolean,
     onStorySeen: (Long) -> Unit,
     onStoryEnded: (Int) -> Unit

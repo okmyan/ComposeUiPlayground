@@ -5,11 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.MuteUserUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -18,10 +23,15 @@ class InstagramStoryViewModel(
     private val userWithStories: UserWithStories,
     private val seeStoriesUseCase: SeeStoriesUseCase,
     private val likeStoriesUseCase: LikeStoriesUseCase,
+    private val muteUserUseCase: MuteUserUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InstagramStoryState())
     val uiState = _uiState.asStateFlow()
+
+    private var notificationsJob: Job? = null
+    private val _notifications = MutableSharedFlow<StoryNotification>()
+    val notifications = _notifications.asSharedFlow()
 
     init {
         Timber.d("Init block ${userWithStories.user}")
@@ -79,6 +89,41 @@ class InstagramStoryViewModel(
         _uiState.value = _uiState.value.copy(
             enteredMessage = TextFieldValue()
         )
+        sendNotification(StoryNotificationType.MESSAGE_SENT)
+    }
+
+    fun onMute() {
+        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onMute (${userWithStories.user}")) {
+            muteUserUseCase(userWithStories.user.id)
+        }
+
+        val isMuted = _uiState.value.user.isMuted
+        _uiState.value = _uiState.value.copy(
+            user = _uiState.value.user.copy(
+                isMuted = !isMuted
+            )
+        )
+
+        if (isMuted) {
+            sendNotification(StoryNotificationType.UNMUTED)
+        } else {
+            sendNotification(StoryNotificationType.MUTED)
+        }
+    }
+
+    fun onReport() {
+        sendNotification(StoryNotificationType.REPORTED)
+    }
+
+    private fun sendNotification(notificationType: StoryNotificationType) {
+        notificationsJob?.cancel()
+        notificationsJob =
+            viewModelScope.launch(CoroutineName("InstagramStoryViewModel - sendNotification $notificationType")) {
+                delay(1000)
+                _notifications.emit(StoryNotification(notificationType, true))
+                delay(3000)
+                _notifications.emit(StoryNotification(notificationType, false))
+            }
     }
 
     fun onStoryEnded(seenStoryIndex: Int) {
