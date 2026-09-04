@@ -11,7 +11,6 @@ data class UserWithStories(
     val userId = user.id
     val isMuted = user.isMuted
 
-    val hasStories = stories.isNotEmpty()
     val hasNonSeenStories = stories.any { !it.isSeen }
     val allStoriesSeen = stories.all { it.isSeen }
 }

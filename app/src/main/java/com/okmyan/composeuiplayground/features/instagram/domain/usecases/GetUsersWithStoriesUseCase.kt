@@ -4,8 +4,10 @@ import com.okmyan.composeuiplayground.features.instagram.data.StoriesRepository
 import com.okmyan.composeuiplayground.features.instagram.data.UsersRepository
 import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 
 class GetUsersWithStoriesUseCase(
     private val usersRepository: UsersRepository,
@@ -17,19 +19,23 @@ class GetUsersWithStoriesUseCase(
             .combine(storiesRepository.observeStories()) { users, stories ->
                 val storiesByUser = stories.groupBy { it.userId }
 
-                users.map { user ->
+                users.mapNotNull { user ->
+                    val userStories = storiesByUser[user.id] ?: return@mapNotNull null
                     UserWithStories(
                         user = user,
-                        stories = storiesByUser[user.id].orEmpty().toImmutableList()
+                        stories = userStories.toImmutableList()
                     )
                 }
-                    .filter { it.hasStories }
-                    .sortedWith(
-                        compareByDescending<UserWithStories> { it.user.isCurrentUser }
-                            .thenByDescending { it.hasNonSeenStories }
-                            .thenBy { it.isMuted }
-                    )
+                    .sortedWith(STORY_COMPARATOR)
             }
+            .flowOn(Dispatchers.Default)
+    }
+
+    companion object {
+        private val STORY_COMPARATOR =
+            compareByDescending<UserWithStories> { it.user.isCurrentUser }
+                .thenByDescending { it.hasNonSeenStories }
+                .thenBy { it.isMuted }
     }
 
 }

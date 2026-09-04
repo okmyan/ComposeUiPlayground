@@ -33,10 +33,6 @@ class InstagramHomeViewModel(
         }
     }
 
-    fun isItFirstUserInHighlights(userWithStories: UserWithStories): Boolean =
-        _uiState.value.usersWithStories.getOrNull(0)?.userId != userWithStories.userId
-
-
     override fun onCleared() {
         Timber.d("onCleared")
     }

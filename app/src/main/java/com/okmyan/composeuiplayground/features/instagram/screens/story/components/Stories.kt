@@ -1,9 +1,6 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.story.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -37,7 +34,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
+import coil3.size.Precision
 import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramStory
 import com.okmyan.composeuiplayground.utils.extensions.mirror
@@ -72,6 +71,8 @@ fun Stories(
                     .data(pictureUrl)
                     .memoryCacheKey("story_${id}")
                     .diskCacheKey("story_${id}")
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .precision(Precision.INEXACT)
                     .build(),
                 onLoading = { isStoryLoading = true },
                 onSuccess = { isStoryLoading = false },

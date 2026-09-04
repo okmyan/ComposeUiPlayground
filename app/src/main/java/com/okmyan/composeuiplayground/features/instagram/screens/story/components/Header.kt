@@ -20,7 +20,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
+import coil3.size.Precision
 import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramStory
 import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramUser
@@ -78,6 +80,8 @@ fun Avatar(user: InstagramUser) = user.run {
             .data(avatarPreviewUrl)
             .memoryCacheKey("user_${id}")
             .diskCacheKey("user_${id}")
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .precision(Precision.INEXACT)
             .build(),
         contentDescription = contentDescription,
         modifier = Modifier

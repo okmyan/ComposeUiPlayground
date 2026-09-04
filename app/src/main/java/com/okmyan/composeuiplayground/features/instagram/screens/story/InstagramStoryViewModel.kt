@@ -7,6 +7,7 @@ import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithSt
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.MuteUserUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.utils.getActiveStoryIndex
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineName
@@ -141,16 +142,7 @@ class InstagramStoryViewModel(
     }
 
     private fun updateActiveStoryIndex() {
-        var activeStoryIndex = 0
-
-        run breaking@{
-            _uiState.value.stories.forEachIndexed { index, story ->
-                if (!story.isSeen) {
-                    activeStoryIndex = index
-                    return@breaking
-                }
-            }
-        }
+        val activeStoryIndex = getActiveStoryIndex(_uiState.value.stories)
 
         _uiState.value = _uiState.value.copy(
             activeStoryIndex = activeStoryIndex,
