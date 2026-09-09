@@ -42,7 +42,8 @@ import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramS
 import com.okmyan.composeuiplayground.utils.extensions.mirror
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
-import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun Stories(
@@ -91,8 +92,7 @@ fun Stories(
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            for (index in 0 until stories.size) {
-                val story = stories[index]
+            for ((index, story) in stories.withIndex()) {
                 LinearDeterminateIndicator(
                     modifier = Modifier.weight(1f),
                     isLoaded = story.isSeen,
@@ -201,7 +201,7 @@ fun LinearDeterminateIndicator(
 }
 
 /**
- * Advances the progress from [startProgress] to completion.
+ * Advances the progress from [startProgress] to completion over [STORY_DURATION].
  *
  * Progress is updated only while [isContinuous] returns `true`, allowing the
  * operation to be paused and resumed without restarting the coroutine.
@@ -211,18 +211,20 @@ suspend fun loadProgress(
     startProgress: Float,
     updateProgress: (Float) -> Unit,
 ) {
-    val step = 300
-    val start = max(1, (startProgress * step).toInt())
-    var i = start
+    val totalDurationNanos = STORY_DURATION.inWholeNanoseconds.toDouble()
+    var elapsedNanos = startProgress * totalDurationNanos
+    val delay = 16.milliseconds
 
-    while (i <= step) {
-        delay(30)
+    while (elapsedNanos < totalDurationNanos) {
+        val startTime = System.nanoTime()
+        delay(delay) // Approx. 60 FPS
+        val frameTimeNanos = System.nanoTime() - startTime
 
-        if (!isContinuous()) {
-            continue
+        if (isContinuous()) {
+            elapsedNanos += frameTimeNanos
+            updateProgress((elapsedNanos / totalDurationNanos).coerceAtMost(1.0).toFloat())
         }
-
-        updateProgress(i.toFloat() / step)
-        i++
     }
 }
+
+val STORY_DURATION = 2.seconds // TODO 5 seconds

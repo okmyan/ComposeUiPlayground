@@ -7,7 +7,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
-import com.okmyan.composeuiplayground.features.instagram.InstagramNavigation
+import com.okmyan.composeuiplayground.features.instagram.navigation.InstagramNavigation
 import com.okmyan.composeuiplayground.navigation.Route.A
 import com.okmyan.composeuiplayground.navigation.Route.B
 import com.okmyan.composeuiplayground.navigation.Route.C

@@ -10,6 +10,7 @@ import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStor
 import com.okmyan.composeuiplayground.features.instagram.utils.getActiveStoryIndex
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -27,7 +28,11 @@ class InstagramStoryViewModel(
     private val muteUserUseCase: MuteUserUseCase,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(InstagramStoryState())
+    private val _uiState = MutableStateFlow(
+        InstagramStoryState(
+            user = userWithStories.user,
+        )
+    )
     val uiState = _uiState.asStateFlow()
 
     private var notificationsJob: Job? = null
@@ -78,17 +83,18 @@ class InstagramStoryViewModel(
         )
     }
 
-    fun onMessageChange(message: TextFieldValue) {
+    fun onMessageChange(storyId: Long, message: TextFieldValue) {
         _uiState.value = _uiState.value.copy(
-            enteredMessage = message
+            enteredMessage = _uiState.value.enteredMessage.toPersistentMap()
+                .putting(storyId, message)
         )
     }
 
-    fun onMessageSend() {
+    fun onMessageSend(storyId: Long) {
         Timber.d("The user sent the following message:\n${_uiState.value.enteredMessage}")
 
         _uiState.value = _uiState.value.copy(
-            enteredMessage = TextFieldValue()
+            enteredMessage = _uiState.value.enteredMessage.toPersistentMap().removing(storyId)
         )
         sendNotification(StoryNotificationType.MESSAGE_SENT)
     }

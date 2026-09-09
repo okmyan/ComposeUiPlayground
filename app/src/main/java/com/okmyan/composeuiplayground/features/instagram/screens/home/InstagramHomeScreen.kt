@@ -1,9 +1,12 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.home
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +41,8 @@ import org.koin.androidx.compose.koinViewModel
 fun InstagramHomeScreen(
     viewModel: InstagramHomeViewModel = koinViewModel(),
     onGoToStories: (UserWithStories, List<UserWithStories>) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -65,6 +70,8 @@ fun InstagramHomeScreen(
             onGoToStories = { userWithStories ->
                 onGoToStories(userWithStories, state.usersWithStories)
             },
+            sharedTransitionScope = sharedTransitionScope,
+            animatedVisibilityScope = animatedVisibilityScope,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -74,6 +81,8 @@ fun InstagramHomeScreen(
 fun InstagramHomeScreenContent(
     state: InstagramHomeState,
     onGoToStories: (UserWithStories) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -82,9 +91,9 @@ fun InstagramHomeScreenContent(
             .verticalScroll(rememberScrollState()),
     ) {
         LazyRow(
-            verticalAlignment = Alignment.CenterVertically,
+            contentPadding = PaddingValues(horizontal = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
-            modifier = Modifier.padding(10.dp)
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             items(state.usersWithStories) { userWithStories ->
                 Story(
@@ -95,6 +104,8 @@ fun InstagramHomeScreenContent(
                     onAddStory = {
                         Toast.makeText(context, "add", Toast.LENGTH_SHORT).show()
                     },
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope,
                 )
             }
         }

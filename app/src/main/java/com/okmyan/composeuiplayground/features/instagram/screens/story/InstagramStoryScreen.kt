@@ -1,5 +1,7 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.story
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -15,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
@@ -38,12 +41,15 @@ fun InstagramStoryScreen(
     hasPreviousStory: Boolean,
     onGoToPrevious: () -> Unit,
     onGoToNext: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val notification by viewModel.notifications.collectAsStateWithLifecycle(StoryNotification())
 
-    val enteredMessage = state.enteredMessage
+    val activeStoryId = state.activeStoryId
+    val enteredMessage = state.enteredMessage[activeStoryId] ?: TextFieldValue("")
 
     var isMessageEditing by remember { mutableStateOf(false) }
     val blackoutAlpha by animateFloatAsState(
@@ -59,69 +65,86 @@ fun InstagramStoryScreen(
         .fillMaxWidth()
         .padding(8.dp)
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .clearFocusOnTap(LocalFocusManager.current),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.weight(1f)) {
-                Stories(
-                    stories = state.stories,
-                    activeStoryIndex = state.activeStoryIndex,
-                    onStorySeen = viewModel::onStorySeen,
-                    isContinuous = !isMessageEditing,
-                    onStoryEnded = {
-                        if (state.isActiveStoryLastOne) {
-                            onGoToNext()
-                        } else {
-                            viewModel.onStoryEnded(it)
-                        }
-                    },
+    with(sharedTransitionScope) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .sharedBounds(
+                    sharedContentState = rememberSharedContentState(key = "container_${userWithStories.userId}"),
+                    animatedVisibilityScope = animatedVisibilityScope,
                 )
-                Header(
-                    modifier = Modifier.padding(
-                        horizontal = 10.dp,
-                        vertical = 20.dp
-                    ),
-                    user = state.user,
-                    activeStory = state.activeStory,
-                    onOptionsClick = { showOptions = true },
+                .clearFocusOnTap(LocalFocusManager.current),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .skipToLookaheadSize()
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    Stories(
+                        stories = state.stories,
+                        activeStoryIndex = state.activeStoryIndex,
+                        onStorySeen = viewModel::onStorySeen,
+                        hasPrevStory = hasPreviousStory,
+                        onGoToPrevStory = {},
+                        onGoToNextStory = {},
+                        onGoToPrevUserStories = onGoToPrevious,
+                        onGoToNextUserStories = onGoToNext,
+                        isContinuous = isStoryContinuous,
+                        onStoryEnded = {
+                            if (state.isActiveStoryLastOne) {
+                                onGoToNext()
+                            } else {
+                                viewModel.onStoryEnded(it)
+                            }
+                        },
+                    )
+                    Header(
+                        modifier = Modifier.padding(
+                            horizontal = 10.dp,
+                            vertical = 20.dp
+                        ),
+                        user = state.user,
+                        activeStory = state.activeStory,
+                        onOptionsClick = { showOptions = true },
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                    )
+                }
+
+                if (!state.user.isCurrentUser) {
+                    Tail(
+                        modifier = messageFieldModifier,
+                        onMessageEditing = { isMessageEditing = true },
+                        message = enteredMessage.text,
+                        isLiked = state.activeStory.isLiked,
+                        onLike = { viewModel.onStoryLiked(state.activeStory.id) },
+                    )
+                }
+            }
+
+            BlackoutStory(blackoutAlpha = blackoutAlpha)
+
+            StoryNotificationPopup(notification)
+
+            if (showOptions) {
+                StoryBottomSheet(
+                    isMuted = state.user.isMuted,
+                    onDismiss = { showOptions = false },
+                    onReport = viewModel::onReport,
+                    onMute = viewModel::onMute,
                 )
             }
 
-            if (!state.user.isCurrentUser) {
-                Tail(
-                    modifier = messageFieldModifier,
-                    onMessageEditing = { isMessageEditing = true },
-                    message = enteredMessage.text,
-                    isLiked = state.activeStory.isLiked,
-                    onLike = { viewModel.onStoryLiked(state.activeStory.id) },
-                )
-            }
-        }
-
-        BlackoutStory(blackoutAlpha = blackoutAlpha)
-
-        StoryNotificationPopup(notification)
-
-        if (showOptions) {
-            StoryBottomSheet(
-                isMuted = state.user.isMuted,
-                onDismiss = { showOptions = false },
-                onReport = viewModel::onReport,
-                onMute = viewModel::onMute,
+            MessageTextField(
+                isMessageEditing = isMessageEditing,
+                message = enteredMessage,
+                onMessageChange = { viewModel.onMessageChange(activeStoryId, it) },
+                onKeyboardHide = { isMessageEditing = false },
+                onMessageSent = { viewModel.onMessageSend(activeStoryId) },
+                modifier = messageFieldModifier,
             )
         }
-
-        MessageTextField(
-            isMessageEditing = isMessageEditing,
-            message = enteredMessage,
-            onMessageChange = viewModel::onMessageChange,
-            onKeyboardHide = { isMessageEditing = false },
-            onMessageSent = viewModel::onMessageSend,
-            modifier = messageFieldModifier,
-        )
     }
 }

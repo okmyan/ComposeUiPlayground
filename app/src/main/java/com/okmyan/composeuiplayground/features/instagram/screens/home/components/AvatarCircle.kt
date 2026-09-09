@@ -1,5 +1,7 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.home.components
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,66 +37,90 @@ fun AvatarCircle(
     hasNonSeenStories: Boolean,
     onClick: () -> Unit,
     onAddStory: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
 ) = user.run {
-    Box {
-        val brush = if (hasNonSeenStories) {
-            Brush.linearGradient(
-                colors = listOf(
-                    Color(0xFFFCAF45), Color(0xFFF77737), Color(0xFFF56040), Color(0xFFFD1D1D),
-                    Color(0xFFE1306C), Color(0xFFC13584), Color(0xFF833AB4),
-                )
-            )
-        } else {
-            SolidColor(Color(0xFF494949))
-        }
+    with(animatedVisibilityScope) {
+        with(sharedTransitionScope) {
+            Box {
+                val brush = if (hasNonSeenStories) {
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFFCAF45), Color(0xFFF77737), Color(0xFFF56040),
+                            Color(0xFFFD1D1D), Color(0xFFE1306C), Color(0xFFC13584),
+                            Color(0xFF833AB4),
+                        )
+                    )
+                } else {
+                    SolidColor(Color(0xFF494949))
+                }
 
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(100.dp)
-                .border(
-                    width = 3.dp,
-                    brush = brush,
-                    shape = CircleShape
-                )
-        ) {
-            val contentDescription = if (isCurrentUser) {
-                stringResource(R.string.instagram_your_avatar_description)
-            } else {
-                stringResource(R.string.instagram_avatar_description, username)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .border(
+                            width = 3.dp,
+                            brush = brush,
+                            shape = CircleShape
+                        )
+                ) {
+                    val contentDescription = if (isCurrentUser) {
+                        stringResource(R.string.instagram_your_avatar_description)
+                    } else {
+                        stringResource(R.string.instagram_avatar_description, username)
+                    }
+
+                    // Container for the full-size story
+                    Box(
+                        modifier = Modifier.sharedBounds(
+                            sharedContentState = rememberSharedContentState(key = "container_${id}"),
+                            animatedVisibilityScope = animatedVisibilityScope,
+                        )
+                    ) {}
+
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(avatarPreviewUrl)
+                            .memoryCacheKey("user_${id}")
+                            .diskCacheKey("user_${id}")
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .precision(Precision.INEXACT)
+                            .build(),
+                        contentDescription = contentDescription,
+                        modifier = Modifier
+                            .size(83.dp)
+                            .sharedBounds(
+                                sharedContentState = rememberSharedContentState(key = "user_${id}"),
+                                animatedVisibilityScope = animatedVisibilityScope,
+                                clipInOverlayDuringTransition = OverlayClip(CircleShape)
+                            )
+                            .border(0.2.dp, PurpleGrey40, CircleShape)
+                            .clip(CircleShape)
+                            .clickable(onClick = onClick),
+                    )
+
+                }
+
+                if (isCurrentUser) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.instagram_add_story),
+                        tint = Color.Black,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(2.5.dp)
+                            .size(30.dp)
+                            .renderInSharedTransitionScopeOverlay()
+                            .animateEnterExit()
+                            .background(MaterialTheme.colorScheme.background, CircleShape)
+                            .padding(2.5.dp)
+                            .background(Color.White, CircleShape)
+                            .padding(2.5.dp)
+                            .clickable(onClick = onAddStory)
+                    )
+                }
             }
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(avatarPreviewUrl)
-                    .memoryCacheKey("user_${id}")
-                    .diskCacheKey("user_${id}")
-                    .diskCachePolicy(CachePolicy.ENABLED)
-                    .precision(Precision.INEXACT)
-                    .build(),
-                contentDescription = contentDescription,
-                modifier = Modifier
-                    .size(83.dp)
-                    .border(0.2.dp, PurpleGrey40, CircleShape)
-                    .clip(CircleShape)
-                    .clickable(onClick = onClick),
-            )
-        }
-
-        if (isCurrentUser) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = stringResource(R.string.instagram_add_story),
-                tint = Color.Black,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(2.5.dp)
-                    .size(30.dp)
-                    .background(MaterialTheme.colorScheme.background, CircleShape)
-                    .padding(2.5.dp)
-                    .background(Color.White, CircleShape)
-                    .padding(2.5.dp)
-                    .clickable(onClick = onAddStory)
-            )
         }
     }
 }

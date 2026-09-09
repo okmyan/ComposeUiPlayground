@@ -1,5 +1,7 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.home.components
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
@@ -15,6 +17,8 @@ fun Story(
     userWithStories: UserWithStories,
     onClick: () -> Unit,
     onAddStory: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -27,6 +31,8 @@ fun Story(
             hasNonSeenStories = userWithStories.hasNonSeenStories,
             onClick = onClick,
             onAddStory = onAddStory,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedVisibilityScope = animatedVisibilityScope,
         )
 
         val title = if (userWithStories.user.isCurrentUser) {

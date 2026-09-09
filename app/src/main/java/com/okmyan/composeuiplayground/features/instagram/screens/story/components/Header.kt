@@ -1,5 +1,7 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.story.components
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -33,6 +35,8 @@ fun Header(
     user: InstagramUser,
     activeStory: InstagramStory,
     onOptionsClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -43,7 +47,11 @@ fun Header(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Avatar(user)
+            Avatar(
+                user = user,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope,
+            )
 
             val title = if (user.isCurrentUser) {
                 stringResource(R.string.instagram_your_story)
@@ -69,23 +77,34 @@ fun Header(
 }
 
 @Composable
-fun Avatar(user: InstagramUser) = user.run {
+fun Avatar(
+    user: InstagramUser,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+) = user.run {
     val contentDescription = if (isCurrentUser) {
         stringResource(R.string.instagram_your_avatar_description)
     } else {
         stringResource(R.string.instagram_avatar_description, username)
     }
-    AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(avatarPreviewUrl)
-            .memoryCacheKey("user_${id}")
-            .diskCacheKey("user_${id}")
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .precision(Precision.INEXACT)
-            .build(),
-        contentDescription = contentDescription,
-        modifier = Modifier
-            .size(35.dp)
-            .clip(CircleShape)
-    )
+    with(sharedTransitionScope) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(avatarPreviewUrl)
+                .memoryCacheKey("user_${id}")
+                .diskCacheKey("user_${id}")
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .precision(Precision.INEXACT)
+                .build(),
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .size(35.dp)
+                .sharedBounds(
+                    sharedContentState = rememberSharedContentState(key = "user_${id}"),
+                    animatedVisibilityScope = animatedVisibilityScope,
+                    clipInOverlayDuringTransition = OverlayClip(CircleShape)
+                )
+                .clip(CircleShape)
+        )
+    }
 }
