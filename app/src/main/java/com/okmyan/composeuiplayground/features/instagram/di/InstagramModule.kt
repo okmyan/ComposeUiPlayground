@@ -2,12 +2,15 @@ package com.okmyan.composeuiplayground.features.instagram.di
 
 import com.okmyan.composeuiplayground.features.instagram.data.StoriesRepository
 import com.okmyan.composeuiplayground.features.instagram.data.UsersRepository
-import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetUsersWithStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetFeedStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetSelfStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetStoriesByOwnerUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.MuteUserUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
-import com.okmyan.composeuiplayground.features.instagram.screens.home.InstagramHomeViewModel
-import com.okmyan.composeuiplayground.features.instagram.screens.story.InstagramStoryViewModel
+import com.okmyan.composeuiplayground.features.instagram.screens.accountownerstory.AccountOwnerStoryViewModel
+import com.okmyan.composeuiplayground.features.instagram.screens.feed.FeedViewModel
+import com.okmyan.composeuiplayground.features.instagram.screens.story.StoryViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
@@ -18,15 +21,19 @@ val instagramModule = module {
     singleOf(::UsersRepository)
     singleOf(::StoriesRepository)
 
-    factoryOf(::GetUsersWithStoriesUseCase)
+    factoryOf(::GetFeedStoriesUseCase)
+    factoryOf(::GetSelfStoriesUseCase)
+    factoryOf(::GetStoriesByOwnerUseCase)
     factoryOf(::SeeStoriesUseCase)
     factoryOf(::LikeStoriesUseCase)
     factoryOf(::MuteUserUseCase)
 
-    viewModelOf(::InstagramHomeViewModel)
+    viewModelOf(::FeedViewModel)
+    viewModelOf(::AccountOwnerStoryViewModel)
     viewModel { params ->
-        InstagramStoryViewModel(
-            userWithStories = params.get(),
+        StoryViewModel(
+            selectedStoryOwnerId = params.get(),
+            getStoriesByOwnerUseCase = get(),
             seeStoriesUseCase = get(),
             likeStoriesUseCase = get(),
             muteUserUseCase = get(),

@@ -10,17 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.BlackoutStory
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Header
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.MessageTextField
@@ -28,19 +28,21 @@ import com.okmyan.composeuiplayground.features.instagram.screens.story.component
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.StoryBottomSheet
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.StoryNotificationPopup
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Tail
-import com.okmyan.composeuiplayground.utils.extensions.clearFocusOnTap
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import timber.log.Timber
 
 @Composable
-fun InstagramStoryScreen(
-    userWithStories: UserWithStories,
-    viewModel: InstagramStoryViewModel = koinViewModel {
-        parametersOf(userWithStories)
+fun StoryScreen(
+    selectedStoryOwnerId: Long,
+    viewModel: StoryViewModel = koinViewModel(key = selectedStoryOwnerId.toString()) {
+        parametersOf(selectedStoryOwnerId)
     },
-    hasPreviousStory: Boolean,
+    isContinuous: Boolean,
+    isPageActive: Boolean = true,
     onGoToPrevious: () -> Unit,
     onGoToNext: () -> Unit,
+    onScrollAbilityChange: (Boolean) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
@@ -57,9 +59,21 @@ fun InstagramStoryScreen(
         animationSpec = tween(300),
     )
 
+    DisposableEffect(isMessageEditing) {
+        onScrollAbilityChange(!isMessageEditing)
+
+        onDispose {
+            // If the screen is destroyed while editing,
+            // ensure we leave the pager in a "clean" (scrollable) state
+            if (isMessageEditing) {
+                onScrollAbilityChange(true)
+            }
+        }
+    }
+
     var showOptions by remember { mutableStateOf(false) }
 
-    val isStoryContinuous = !isMessageEditing && !showOptions
+    val isStoryContinuous = isContinuous && !isMessageEditing && !showOptions
 
     val messageFieldModifier = Modifier
         .fillMaxWidth()
@@ -70,10 +84,9 @@ fun InstagramStoryScreen(
             modifier = modifier
                 .fillMaxSize()
                 .sharedBounds(
-                    sharedContentState = rememberSharedContentState(key = "container_${userWithStories.userId}"),
+                    sharedContentState = rememberSharedContentState(key = "container_${selectedStoryOwnerId}"),
                     animatedVisibilityScope = animatedVisibilityScope,
-                )
-                .clearFocusOnTap(LocalFocusManager.current),
+                ),
             contentAlignment = Alignment.BottomCenter,
         ) {
             Column(
@@ -85,8 +98,8 @@ fun InstagramStoryScreen(
                     Stories(
                         stories = state.stories,
                         activeStoryIndex = state.activeStoryIndex,
+                        isPageActive = isPageActive,
                         onStorySeen = viewModel::onStorySeen,
-                        hasPrevStory = hasPreviousStory,
                         onGoToPrevStory = {},
                         onGoToNextStory = {},
                         onGoToPrevUserStories = onGoToPrevious,
@@ -94,6 +107,7 @@ fun InstagramStoryScreen(
                         isContinuous = isStoryContinuous,
                         onStoryEnded = {
                             if (state.isActiveStoryLastOne) {
+                                Timber.d("go to next $selectedStoryOwnerId")
                                 onGoToNext()
                             } else {
                                 viewModel.onStoryEnded(it)
@@ -105,7 +119,7 @@ fun InstagramStoryScreen(
                             horizontal = 10.dp,
                             vertical = 20.dp
                         ),
-                        user = state.user,
+                        user = state.storyOwner,
                         activeStory = state.activeStory,
                         onOptionsClick = { showOptions = true },
                         sharedTransitionScope = sharedTransitionScope,
@@ -113,24 +127,24 @@ fun InstagramStoryScreen(
                     )
                 }
 
-                if (!state.user.isCurrentUser) {
-                    Tail(
-                        modifier = messageFieldModifier,
-                        onMessageEditing = { isMessageEditing = true },
-                        message = enteredMessage.text,
-                        isLiked = state.activeStory.isLiked,
-                        onLike = { viewModel.onStoryLiked(state.activeStory.id) },
-                    )
-                }
+                Tail(
+                    modifier = messageFieldModifier,
+                    onMessageEditing = { isMessageEditing = true },
+                    message = enteredMessage.text,
+                    isLiked = state.activeStory.isLiked,
+                    onLike = { viewModel.onStoryLiked(state.activeStory.id) },
+                )
             }
 
-            BlackoutStory(blackoutAlpha = blackoutAlpha)
+            BlackoutStory(blackoutAlpha = blackoutAlpha, onClick = {
+                isMessageEditing = false
+            })
 
             StoryNotificationPopup(notification)
 
             if (showOptions) {
                 StoryBottomSheet(
-                    isMuted = state.user.isMuted,
+                    isMuted = state.storyOwner.isMuted,
                     onDismiss = { showOptions = false },
                     onReport = viewModel::onReport,
                     onMute = viewModel::onMute,

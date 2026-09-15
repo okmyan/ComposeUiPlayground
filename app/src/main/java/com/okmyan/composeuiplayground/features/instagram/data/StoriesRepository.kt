@@ -12,6 +12,9 @@ class StoriesRepository {
     fun observeStories(): Flow<List<InstagramStory>> = _stories.asStateFlow()
 
     // It is suspended, since it is assumed to be a network call
+    suspend fun getStoriesByOwnerIds(storyOwnerId: Long): List<InstagramStory> =
+        _stories.value.filter { storyOwnerId == it.userId }
+
     suspend fun seeStory(id: Long) {
         _stories.value = _stories.value.map { story ->
             story.copy(
@@ -37,12 +40,19 @@ class StoriesRepository {
     }
 
     companion object {
+        private val staticPicture = false
+        private val pictureUrl = if (staticPicture) {
+            "https://fastly.picsum.photos/id/988/720/1280.jpg?hmac=iUCI69AQcV_JmOlPnEtTuuoE0DGUWpQ__VluY2ao-uU"
+        } else {
+            "https://picsum.photos/720/1280"
+        }
+
         val INITIAL_STORIES_STATE = listOf(
             // john950808
             InstagramStory(
                 id = 1L,
                 userId = 1L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "1h",
                 isSeen = true,
                 isLiked = false,
@@ -52,7 +62,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 2L,
                 userId = 2L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "1h",
                 isSeen = false,
                 isLiked = false,
@@ -62,7 +72,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 3L,
                 userId = 3L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "2h",
                 isSeen = false,
                 isLiked = false,
@@ -70,7 +80,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 4L,
                 userId = 3L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "2,5h",
                 isSeen = false,
                 isLiked = false,
@@ -80,7 +90,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 5L,
                 userId = 4L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "40m",
                 isSeen = true,
                 isLiked = true,
@@ -88,15 +98,15 @@ class StoriesRepository {
             InstagramStory(
                 id = 6L,
                 userId = 4L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "45m",
-                isSeen = false,
+                isSeen = true,
                 isLiked = false,
             ),
             InstagramStory(
                 id = 7L,
                 userId = 4L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "50m",
                 isSeen = false,
                 isLiked = false,
@@ -106,7 +116,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 8L,
                 userId = 5L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "20h",
                 isSeen = true,
                 isLiked = true,
@@ -116,7 +126,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 9L,
                 userId = 6L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "2h",
                 isSeen = true,
                 isLiked = false,
@@ -126,7 +136,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 10L,
                 userId = 7L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "3h",
                 isSeen = true,
                 isLiked = true,
@@ -134,7 +144,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 11L,
                 userId = 7L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "3h",
                 isSeen = true,
                 isLiked = false,
@@ -144,7 +154,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 12L,
                 userId = 8L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "10m",
                 isSeen = false,
                 isLiked = false,
@@ -154,7 +164,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 13L,
                 userId = 9L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "1h",
                 isSeen = false,
                 isLiked = false,
@@ -164,7 +174,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 14L,
                 userId = 10L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "1h",
                 isSeen = true,
                 isLiked = false,
@@ -172,7 +182,7 @@ class StoriesRepository {
             InstagramStory(
                 id = 15L,
                 userId = 10L,
-                pictureUrl = "https://picsum.photos/720/1280",
+                pictureUrl = pictureUrl,
                 publishedAt = "10h",
                 isSeen = false,
                 isLiked = false,

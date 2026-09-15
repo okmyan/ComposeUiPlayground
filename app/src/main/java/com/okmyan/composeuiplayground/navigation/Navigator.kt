@@ -14,6 +14,7 @@ class Navigator<T : NavKey>(val state: NavigationState<T>) {
      * If [unique] is true, it ensures only one instance of the route exists in the current stack
      * by popping back to the existing instance if found.
      */
+    // TODO remove unique parameter
     fun navigate(route: T, unique: Boolean = false) {
         if (route in state.backStacks.keys) {
             if (state.topLevelRoute == route) {
@@ -33,6 +34,25 @@ class Navigator<T : NavKey>(val state: NavigationState<T>) {
             }
         }
         backStack.add(route)
+    }
+
+    fun replaceCurrent(route: T) {
+        if (route in state.backStacks.keys) {
+            if (state.topLevelRoute == route) {
+                resetStack(route)
+            } else {
+                state.topLevelRoute = route
+            }
+            return
+        }
+
+        val backStack = state.backStacks[state.topLevelRoute] ?: return
+
+        if (backStack.size > 1) {
+            backStack[backStack.lastIndex] = route
+        } else {
+            backStack.add(route)
+        }
     }
 
     /**

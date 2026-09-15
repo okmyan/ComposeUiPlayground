@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.home
+package com.okmyan.composeuiplayground.features.instagram.screens.feed
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -30,17 +29,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
-import com.okmyan.composeuiplayground.features.instagram.screens.home.components.PreloadStories
-import com.okmyan.composeuiplayground.features.instagram.screens.home.components.Story
+import com.okmyan.composeuiplayground.features.instagram.domain.model.FeedStory
+import com.okmyan.composeuiplayground.features.instagram.screens.feed.components.FeedStory
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun InstagramHomeScreen(
-    viewModel: InstagramHomeViewModel = koinViewModel(),
-    onGoToStories: (UserWithStories, List<UserWithStories>) -> Unit,
+fun FeedScreen(
+    viewModel: FeedViewModel = koinViewModel(),
+    onGoToSelfStories: () -> Unit,
+    onGoToStories: (Long, List<Long>) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
@@ -51,24 +52,26 @@ fun InstagramHomeScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    PreloadStories(state.usersWithStories)
+    // TODO rewrite it
+//    PreloadStories(state.usersWithStories)
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = {
-            coroutineScope.launch {
+            coroutineScope.launch(CoroutineName("FeedScreen - onRefresh")) {
                 isRefreshing = true
-                delay(1000)
+                delay(1.seconds)
                 isRefreshing = false
             }
         },
         modifier = Modifier.fillMaxSize(),
         state = refreshState,
     ) {
-        InstagramHomeScreenContent(
+        FeedScreenContent(
             state = state,
-            onGoToStories = { userWithStories ->
-                onGoToStories(userWithStories, state.usersWithStories)
+            onGoToSelfStories = onGoToSelfStories,
+            onGoToStories = {
+                onGoToStories(it.storyOwnerId, state.friendsStoryOwnerIds)
             },
             sharedTransitionScope = sharedTransitionScope,
             animatedVisibilityScope = animatedVisibilityScope,
@@ -78,9 +81,10 @@ fun InstagramHomeScreen(
 }
 
 @Composable
-fun InstagramHomeScreenContent(
-    state: InstagramHomeState,
-    onGoToStories: (UserWithStories) -> Unit,
+fun FeedScreenContent(
+    state: FeedState,
+    onGoToSelfStories: () -> Unit,
+    onGoToStories: (FeedStory) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
@@ -95,11 +99,15 @@ fun InstagramHomeScreenContent(
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            items(state.usersWithStories) { userWithStories ->
-                Story(
-                    userWithStories = userWithStories,
+            items(state.feedStories) { feedStory ->
+                FeedStory(
+                    feedStory = feedStory,
                     onClick = {
-                        onGoToStories(userWithStories)
+                        if (feedStory.isAccountOwner) {
+                            onGoToSelfStories()
+                        } else {
+                            onGoToStories(feedStory)
+                        }
                     },
                     onAddStory = {
                         Toast.makeText(context, "add", Toast.LENGTH_SHORT).show()

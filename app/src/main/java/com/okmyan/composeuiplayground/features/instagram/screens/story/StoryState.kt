@@ -8,14 +8,14 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 
-data class InstagramStoryState(
-    val user: InstagramUser = InstagramUser(),
+data class StoryState(
+    val storyOwner: InstagramUser = InstagramUser(),
     val stories: ImmutableList<InstagramStory> = persistentListOf(),
     val activeStoryIndex: Int = 0,
     val enteredMessage: ImmutableMap<Long, TextFieldValue> = persistentMapOf(),
 ) {
     val activeStory: InstagramStory
-        get() = stories.getOrNull(activeStoryIndex) ?: error("InstagramStoryState is broken, $this")
+        get() = stories.getOrNull(activeStoryIndex) ?: error("StoryState is broken, $this")
 
     val activeStoryId: Long
         get() = activeStory.id

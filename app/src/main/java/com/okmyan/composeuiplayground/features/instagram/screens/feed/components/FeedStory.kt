@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.home.components
+package com.okmyan.composeuiplayground.features.instagram.screens.feed.components
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
@@ -10,11 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.okmyan.composeuiplayground.R
-import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.domain.model.FeedStory
 
 @Composable
-fun Story(
-    userWithStories: UserWithStories,
+fun FeedStory(
+    feedStory: FeedStory,
     onClick: () -> Unit,
     onAddStory: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
@@ -27,18 +27,18 @@ fun Story(
         modifier = modifier,
     ) {
         AvatarCircle(
-            user = userWithStories.user,
-            hasNonSeenStories = userWithStories.hasNonSeenStories,
+            user = feedStory.storyOwner,
+            hasNonSeenStories = feedStory.hasNonSeenStories,
             onClick = onClick,
             onAddStory = onAddStory,
             sharedTransitionScope = sharedTransitionScope,
             animatedVisibilityScope = animatedVisibilityScope,
         )
 
-        val title = if (userWithStories.user.isCurrentUser) {
+        val title = if (feedStory.storyOwner.isAccountOwner) {
             stringResource(R.string.instagram_your_story)
         } else {
-            userWithStories.user.username
+            feedStory.storyOwner.username
         }
         Text(text = title)
     }

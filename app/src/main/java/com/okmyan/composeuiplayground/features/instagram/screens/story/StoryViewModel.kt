@@ -3,7 +3,7 @@ package com.okmyan.composeuiplayground.features.instagram.screens.story
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetStoriesByOwnerUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.MuteUserUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
@@ -20,19 +20,17 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.time.Duration.Companion.seconds
 
-class InstagramStoryViewModel(
-    private val userWithStories: UserWithStories,
+class StoryViewModel(
+    private val selectedStoryOwnerId: Long,
+    private val getStoriesByOwnerUseCase: GetStoriesByOwnerUseCase,
     private val seeStoriesUseCase: SeeStoriesUseCase,
     private val likeStoriesUseCase: LikeStoriesUseCase,
     private val muteUserUseCase: MuteUserUseCase,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        InstagramStoryState(
-            user = userWithStories.user,
-        )
-    )
+    private val _uiState = MutableStateFlow(StoryState())
     val uiState = _uiState.asStateFlow()
 
     private var notificationsJob: Job? = null
@@ -40,7 +38,15 @@ class InstagramStoryViewModel(
     val notifications = _notifications.asSharedFlow()
 
     init {
-        Timber.d("Init block ${userWithStories.user}")
+        Timber.d("Init block $selectedStoryOwnerId")
+
+        viewModelScope.launch(CoroutineName("StoryViewModel - getStoriesByOwner $selectedStoryOwnerId")) {
+            getStoriesByOwner()
+        }
+    }
+
+    private suspend fun getStoriesByOwner() {
+        val userWithStories = getStoriesByOwnerUseCase(selectedStoryOwnerId)
 
         // If the user opens the stories that already watched, we show them again
         val stories = if (userWithStories.allStoriesSeen) {
@@ -52,21 +58,21 @@ class InstagramStoryViewModel(
         }.toImmutableList()
 
         _uiState.value = _uiState.value.copy(
-            user = userWithStories.user,
-            stories = stories,
+            storyOwner = userWithStories.user,
+            stories = stories
         )
 
         updateActiveStoryIndex()
     }
 
     fun onStorySeen(storyId: Long) {
-        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStorySeen (${userWithStories.user} $storyId)")) {
+        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStorySeen (${selectedStoryOwnerId} $storyId)")) {
             seeStoriesUseCase(storyId)
         }
     }
 
     fun onStoryLiked(storyId: Long) {
-        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStoryLiked (${userWithStories.user} $storyId)")) {
+        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStoryLiked (${selectedStoryOwnerId} $storyId)")) {
             likeStoriesUseCase(storyId)
         }
 
@@ -100,13 +106,13 @@ class InstagramStoryViewModel(
     }
 
     fun onMute() {
-        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onMute (${userWithStories.user}")) {
-            muteUserUseCase(userWithStories.user.id)
+        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onMute (${selectedStoryOwnerId}")) {
+            muteUserUseCase(selectedStoryOwnerId)
         }
 
-        val isMuted = _uiState.value.user.isMuted
+        val isMuted = _uiState.value.storyOwner.isMuted
         _uiState.value = _uiState.value.copy(
-            user = _uiState.value.user.copy(
+            storyOwner = _uiState.value.storyOwner.copy(
                 isMuted = !isMuted
             )
         )
@@ -126,9 +132,9 @@ class InstagramStoryViewModel(
         notificationsJob?.cancel()
         notificationsJob =
             viewModelScope.launch(CoroutineName("InstagramStoryViewModel - sendNotification $notificationType")) {
-                delay(1000)
+                delay(1.seconds)
                 _notifications.emit(StoryNotification(notificationType, true))
-                delay(3000)
+                delay(3.seconds)
                 _notifications.emit(StoryNotification(notificationType, false))
             }
     }
@@ -156,6 +162,6 @@ class InstagramStoryViewModel(
     }
 
     override fun onCleared() {
-        Timber.d("onCleared ${_uiState.value.user}")
+        Timber.d("onCleared ${_uiState.value.storyOwner}")
     }
 }

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class InstagramUser(
     val id: Long = 0L,
     val username: String = "",
-    val isCurrentUser: Boolean = false,
+    val isAccountOwner: Boolean = false,
     val avatarPreviewUrl: String = "",
     val isMuted: Boolean = false,
 )

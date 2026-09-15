@@ -12,6 +12,12 @@ class UsersRepository {
     fun observeUsers(): Flow<List<InstagramUser>> = _users.asStateFlow()
 
     // It is suspended, since it is assumed to be a network call
+    suspend fun getUserById(id: Long): InstagramUser =
+        _users.value.first { it.id == id }
+
+    suspend fun getAccountOwnerUser(): InstagramUser =
+        _users.value.first { it.isAccountOwner }
+
     suspend fun muteUser(id: Long) {
         _users.value = _users.value.map { user ->
             user.copy(
@@ -26,74 +32,75 @@ class UsersRepository {
 
     companion object {
         val INITIAL_USERS_STATE = listOf(
-
+            // Account owner
             InstagramUser(
                 id = 1L,
                 username = "john950808",
-                isCurrentUser = true,
+                isAccountOwner = true,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
             ),
+
             InstagramUser(
                 id = 2L,
                 username = "anna2522",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
             ),
             InstagramUser(
                 id = 3L,
                 username = "alex_stylist",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = true,
             ),
             InstagramUser(
                 id = 4L,
                 username = "Stephan123",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
             ),
             InstagramUser(
                 id = 5L,
                 username = "Dev17",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
             ),
             InstagramUser(
                 id = 6L,
                 username = "shar_228",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = true,
             ),
             InstagramUser(
                 id = 7L,
                 username = "peppi",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
             ),
             InstagramUser(
                 id = 8L,
                 username = "vesna",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
             ),
             InstagramUser(
                 id = 9L,
                 username = "longtimenosee",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
             ),
             InstagramUser(
                 id = 10L,
                 username = "Stanislau_ll",
-                isCurrentUser = false,
+                isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
             ),

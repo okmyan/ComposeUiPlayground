@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.home.components
+package com.okmyan.composeuiplayground.features.instagram.screens.feed.components
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
@@ -65,7 +65,7 @@ fun AvatarCircle(
                             shape = CircleShape
                         )
                 ) {
-                    val contentDescription = if (isCurrentUser) {
+                    val contentDescription = if (isAccountOwner) {
                         stringResource(R.string.instagram_your_avatar_description)
                     } else {
                         stringResource(R.string.instagram_avatar_description, username)
@@ -102,7 +102,7 @@ fun AvatarCircle(
 
                 }
 
-                if (isCurrentUser) {
+                if (isAccountOwner) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = stringResource(R.string.instagram_add_story),

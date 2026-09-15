@@ -11,25 +11,25 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
-import com.okmyan.composeuiplayground.features.instagram.domain.model.UserWithStories
-import com.okmyan.composeuiplayground.features.instagram.screens.home.InstagramHomeScreen
-import com.okmyan.composeuiplayground.features.instagram.screens.story.InstagramStoryScreen
+import com.okmyan.composeuiplayground.features.instagram.screens.accountownerstory.AccountOwnerStoryScreen
+import com.okmyan.composeuiplayground.features.instagram.screens.feed.FeedScreen
+import com.okmyan.composeuiplayground.features.instagram.screens.story.StoriesPagerScreen
 import com.okmyan.composeuiplayground.navigation.Navigator
 import com.okmyan.composeuiplayground.navigation.Route
-import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.InstagramHome
+import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.AccountOwnerStory
+import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.InstagramFeed
 import com.okmyan.composeuiplayground.navigation.rememberNavigationState
 import com.okmyan.composeuiplayground.navigation.toEntries
-import com.okmyan.composeuiplayground.utils.extensions.findNext
 import com.okmyan.composeuiplayground.navigation.Route.InstagramGraph.InstagramStory as InstagramStoryGraph
 
 @Composable
 fun InstagramNavigation(
     modifier: Modifier = Modifier,
 ) {
-    val topLevelRoutes = setOf(InstagramHome)
+    val topLevelRoutes = setOf(InstagramFeed)
 
     val navigationState = rememberNavigationState<Route>(
-        startRoute = InstagramHome,
+        startRoute = InstagramFeed,
         topLevelRoutes = topLevelRoutes,
     )
     val navigator = remember { Navigator(navigationState) }
@@ -48,38 +48,36 @@ fun InstagramNavDisplay(
     SharedTransitionLayout {
         val entryProvider = remember(navigator) {
             entryProvider {
-                entry<InstagramHome> {
-                    InstagramHomeScreen(
-                        onGoToStories = { user, stories ->
-                            navigator.navigateToUserStory(user, stories)
+                entry<InstagramFeed> {
+                    FeedScreen(
+                        onGoToSelfStories = {
+                            navigator.navigate(AccountOwnerStory)
+                        },
+                        onGoToStories = { selectedStoryOwnerId, storyOwnerIds ->
+                            navigator.navigate(
+                                InstagramStoryGraph(selectedStoryOwnerId, storyOwnerIds),
+                                unique = true,
+                            )
                         },
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = LocalNavAnimatedContentScope.current,
                     )
                 }
                 entry<InstagramStoryGraph> { instagramStory ->
-                    val hasPreviousStories =
-                        instagramStory.stories.getOrNull(1)?.userId != instagramStory.user.userId
-                    InstagramStoryScreen(
-                        userWithStories = instagramStory.user,
-                        hasPreviousStory = hasPreviousStories,
-                        onGoToPrevious = {
-                            val iterator = instagramStory.stories.reversed().iterator()
-                            val previousUser =
-                                iterator.findNext { it.userId == instagramStory.user.userId }
-
-                            navigator.navigateToUserStory(previousUser, instagramStory.stories)
-                        },
-                        onGoToNext = {
-                            val iterator = instagramStory.stories.iterator()
-                            val nextUser =
-                                iterator.findNext { it.userId == instagramStory.user.userId }
-
-                            navigator.navigateToUserStory(nextUser, instagramStory.stories)
-                        },
+                    StoriesPagerScreen(
+                        selectedStoryOwnerId = instagramStory.selectedStoryOwnerId,
+                        storyOwnerIds = instagramStory.storyOwnerIds,
+                        onStoriesEnd = { navigator.goBack() },
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = LocalNavAnimatedContentScope.current,
                         modifier = modifier,
+                    )
+                }
+                entry<AccountOwnerStory> {
+                    AccountOwnerStoryScreen(
+                        onStoriesEnd = { navigator.goBack() },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = LocalNavAnimatedContentScope.current,
                     )
                 }
             }
@@ -88,7 +86,7 @@ fun InstagramNavDisplay(
             entries = navigator.state.toEntries(entryProvider),
             modifier = modifier,
             onBack = {
-                if (navigator.isRouteOnTopOfBackStack(InstagramHome)) {
+                if (navigator.isRouteOnTopOfBackStack(InstagramFeed)) {
                     navigator.goBack()
                 } else {
                     navigator.resetStack()
@@ -102,16 +100,5 @@ fun InstagramNavDisplay(
                 EnterTransition.None togetherWith ExitTransition.None
             }
         )
-    }
-}
-
-private fun Navigator<Route>.navigateToUserStory(
-    userWithStories: UserWithStories?,
-    usersWithStories: List<UserWithStories>,
-) {
-    if (userWithStories != null) {
-        navigate(InstagramStoryGraph(userWithStories, usersWithStories), unique = true)
-    } else {
-        resetStack()
     }
 }

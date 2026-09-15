@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -42,6 +43,7 @@ import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramS
 import com.okmyan.composeuiplayground.utils.extensions.mirror
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
+import timber.log.Timber
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -49,7 +51,7 @@ import kotlin.time.Duration.Companion.seconds
 fun Stories(
     stories: ImmutableList<InstagramStory>,
     activeStoryIndex: Int,
-    hasPrevStory: Boolean,
+    isPageActive: Boolean,
     onGoToPrevStory: () -> Unit,
     onGoToNextStory: () -> Unit,
     onGoToPrevUserStories: () -> Unit,
@@ -95,8 +97,9 @@ fun Stories(
             for ((index, story) in stories.withIndex()) {
                 LinearDeterminateIndicator(
                     modifier = Modifier.weight(1f),
+                    storyId = story.id,
                     isLoaded = story.isSeen,
-                    isActive = index == activeStoryIndex,
+                    isActive = (index == activeStoryIndex) && isPageActive,
                     isContinuous = !storyInPause,
                     onStart = {
                         onStorySeen(story.id)
@@ -164,19 +167,37 @@ fun StoriesErrorPreview() {
 @Composable
 fun LinearDeterminateIndicator(
     modifier: Modifier,
+    storyId: Long,
     isLoaded: Boolean,
     isActive: Boolean,
     isContinuous: Boolean,
     onStart: () -> Unit,
     onStop: () -> Unit,
 ) {
-    val initialValue = if (isLoaded) 1f else 0f
-    var currentProgress by remember { mutableFloatStateOf(initialValue) }
+    var currentProgress by remember(storyId, isLoaded) {
+        mutableFloatStateOf(if (isLoaded) 1f else 0f)
+    }
+
+    // We use a trigger to restart the animation if the story reached 1.0 
+    // but the user interrupted the Pager transition and stayed on the same page
+    var restartTrigger by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(isContinuous) {
+        if (isContinuous && isActive && currentProgress >= 1f && !isLoaded) {
+            restartTrigger++
+        }
+    }
 
     val currentIsContinuous by rememberUpdatedState(isContinuous)
 
-    LaunchedEffect(isActive) {
+    LaunchedEffect(isActive, restartTrigger) {
         if (isActive) {
+            // Force reset if starting a fresh story that isn't loaded yet
+            if (currentProgress >= 1f && !isLoaded) {
+                Timber.d("LinearDeterminateIndicator storyId: $storyId - force reset")
+                currentProgress = 0f
+            }
+
             onStart()
 
             loadProgress(
@@ -227,4 +248,4 @@ suspend fun loadProgress(
     }
 }
 
-val STORY_DURATION = 2.seconds // TODO 5 seconds
+val STORY_DURATION = 5.seconds

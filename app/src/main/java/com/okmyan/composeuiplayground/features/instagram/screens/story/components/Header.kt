@@ -53,7 +53,7 @@ fun Header(
                 animatedVisibilityScope = animatedVisibilityScope,
             )
 
-            val title = if (user.isCurrentUser) {
+            val title = if (user.isAccountOwner) {
                 stringResource(R.string.instagram_your_story)
             } else {
                 user.username
@@ -82,7 +82,7 @@ fun Avatar(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
 ) = user.run {
-    val contentDescription = if (isCurrentUser) {
+    val contentDescription = if (isAccountOwner) {
         stringResource(R.string.instagram_your_avatar_description)
     } else {
         stringResource(R.string.instagram_avatar_description, username)
