@@ -11,7 +11,10 @@ class UsersRepository {
 
     fun observeUsers(): Flow<List<InstagramUser>> = _users.asStateFlow()
 
-    // It is suspended, since it is assumed to be a network call
+    // The functions are suspended, since they are assumed to be network calls
+    suspend fun getUsersByIds(ids: List<Long>): List<InstagramUser> =
+        _users.value.filter { it.id in ids }
+
     suspend fun getUserById(id: Long): InstagramUser =
         _users.value.first { it.id == id }
 

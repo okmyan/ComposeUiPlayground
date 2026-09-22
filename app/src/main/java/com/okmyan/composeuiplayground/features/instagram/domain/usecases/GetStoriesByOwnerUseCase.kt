@@ -17,7 +17,7 @@ class GetStoriesByOwnerUseCase(
         Timber.d("storyOwnerId: $storyOwnerId")
 
         val user = async { usersRepository.getUserById(storyOwnerId) }
-        val storiesDeferred = async { storiesRepository.getStoriesByOwnerIds(storyOwnerId) }
+        val storiesDeferred = async { storiesRepository.getStoriesByOwnerId(storyOwnerId) }
 
         val stories = storiesDeferred.await()
         val allStoriesSeen = stories.all { it.isSeen }

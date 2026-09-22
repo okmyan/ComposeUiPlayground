@@ -11,8 +11,11 @@ class StoriesRepository {
 
     fun observeStories(): Flow<List<InstagramStory>> = _stories.asStateFlow()
 
-    // It is suspended, since it is assumed to be a network call
-    suspend fun getStoriesByOwnerIds(storyOwnerId: Long): List<InstagramStory> =
+    // The functions are suspended, since they are assumed to be network calls
+    suspend fun getStoriesByOwnerIds(userIds: List<Long>): List<InstagramStory> =
+        _stories.value.filter { it.userId in userIds }
+
+    suspend fun getStoriesByOwnerId(storyOwnerId: Long): List<InstagramStory> =
         _stories.value.filter { storyOwnerId == it.userId }
 
     suspend fun seeStory(id: Long) {

@@ -1,7 +1,6 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.story.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -37,7 +36,9 @@ import coil3.request.ImageRequest
 import coil3.size.Precision
 import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramStory
+import com.okmyan.composeuiplayground.features.instagram.screens.components.PreloadStory
 import com.okmyan.composeuiplayground.utils.extensions.mirror
+import com.okmyan.composeuiplayground.utils.extensions.noRippleClickable
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -55,6 +56,11 @@ fun Stories(
 
     var isStoryLoading by remember(activeStory.id) { mutableStateOf(true) }
     val storyInPause = !isContinuous || isStoryLoading
+
+    // Preload the next story in advance
+    stories.getOrNull(activeStoryIndex + 1)?.let {
+        PreloadStory(it)
+    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -119,15 +125,11 @@ fun StoryGestures(
     onRightClick: () -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
-        val interactionSource = remember { MutableInteractionSource() }
-
         Box(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(0.33f)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
+                .noRippleClickable(
                     onClick = onLeftClick
                 )
         )
@@ -136,9 +138,7 @@ fun StoryGestures(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(0.67f)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
+                .noRippleClickable(
                     onClick = onRightClick
                 )
         )

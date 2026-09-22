@@ -4,6 +4,7 @@ import com.okmyan.composeuiplayground.features.instagram.data.StoriesRepository
 import com.okmyan.composeuiplayground.features.instagram.data.UsersRepository
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetFeedStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetStoriesByOwnerUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetUsersWithStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.MuteUserUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
@@ -21,6 +22,7 @@ val instagramModule = module {
     singleOf(::StoriesRepository)
 
     factoryOf(::GetFeedStoriesUseCase)
+    factoryOf(::GetUsersWithStoriesUseCase)
     factoryOf(::GetStoriesByOwnerUseCase)
     factoryOf(::SeeStoriesUseCase)
     factoryOf(::LikeStoriesUseCase)
