@@ -20,6 +20,9 @@ data class StoryState(
     val activeStoryId: Long
         get() = activeStory.id
 
+    val isActiveStoryFirstOne: Boolean
+        get() = activeStoryIndex == 0
+
     val isActiveStoryLastOne: Boolean
         get() = activeStoryIndex == stories.size - 1
 }

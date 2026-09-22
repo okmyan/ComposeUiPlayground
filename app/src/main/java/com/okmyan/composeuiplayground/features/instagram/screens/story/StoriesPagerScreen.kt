@@ -40,7 +40,7 @@ fun StoriesPagerScreen(
         val pagerIsDragged by pagerState.interactionSource.collectIsDraggedAsState()
 
         val scope = rememberCoroutineScope()
-        val gToPrevious: () -> Unit = {
+        val goToPrevPage: () -> Unit = {
             Timber.d("go to previous")
             if (pagerState.currentPage != 0) {
                 scope.launch(CoroutineName("Scroll to prev page")) {
@@ -52,7 +52,7 @@ fun StoriesPagerScreen(
                 }
             }
         }
-        val goToNext: () -> Unit = {
+        val goToNextPage: () -> Unit = {
             Timber.d("go to next")
             if (pagerState.currentPage == pagerState.pageCount - 1) {
                 onStoriesEnd()
@@ -102,8 +102,8 @@ fun StoriesPagerScreen(
                     selectedStoryOwnerId = pageItem,
                     isContinuous = !pagerIsDragged,
                     isPageActive = pagerState.currentPage == pageIndex,
-                    onGoToPrevious = gToPrevious,
-                    onGoToNext = goToNext,
+                    onGoToPrevUserStories = goToPrevPage,
+                    onGoToNextUserStories = goToNextPage,
                     onScrollAbilityChange = { scrollEnabled = it },
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,

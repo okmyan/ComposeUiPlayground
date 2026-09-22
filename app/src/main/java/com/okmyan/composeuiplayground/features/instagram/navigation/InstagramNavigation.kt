@@ -50,8 +50,8 @@ fun InstagramNavDisplay(
             entryProvider {
                 entry<InstagramFeed> {
                     FeedScreen(
-                        onGoToSelfStories = {
-                            navigator.navigate(AccountOwnerStory)
+                        onGoToSelfStories = { accountOwnerId ->
+                            navigator.navigate(AccountOwnerStory(accountOwnerId))
                         },
                         onGoToStories = { selectedStoryOwnerId, storyOwnerIds ->
                             navigator.navigate(
@@ -73,9 +73,10 @@ fun InstagramNavDisplay(
                         modifier = modifier,
                     )
                 }
-                entry<AccountOwnerStory> {
+                entry<AccountOwnerStory> { accountOwner ->
                     AccountOwnerStoryScreen(
-                        onStoriesEnd = { navigator.goBack() },
+                        accountOwnerId = accountOwner.accountOwnerId,
+                        closeStory = { navigator.goBack() },
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = LocalNavAnimatedContentScope.current,
                     )

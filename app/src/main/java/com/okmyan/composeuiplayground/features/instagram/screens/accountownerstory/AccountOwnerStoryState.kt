@@ -16,6 +16,9 @@ data class AccountOwnerStoryState(
         get() = stories.getOrNull(activeStoryIndex)
             ?: error("AccountOwnerStoryState is broken, $this")
 
+    val isActiveStoryFirstOne: Boolean
+        get() = activeStoryIndex == 0
+
     val isActiveStoryLastOne: Boolean
         get() = activeStoryIndex == stories.size - 1
 }

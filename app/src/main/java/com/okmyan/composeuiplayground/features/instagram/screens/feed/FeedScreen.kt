@@ -40,7 +40,7 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel = koinViewModel(),
-    onGoToSelfStories: () -> Unit,
+    onGoToSelfStories: (Long) -> Unit,
     onGoToStories: (Long, List<Long>) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -69,7 +69,9 @@ fun FeedScreen(
     ) {
         FeedScreenContent(
             state = state,
-            onGoToSelfStories = onGoToSelfStories,
+            onGoToSelfStories = {
+                onGoToSelfStories(it.storyOwnerId)
+            },
             onGoToStories = {
                 onGoToStories(it.storyOwnerId, state.friendsStoryOwnerIds)
             },
@@ -83,7 +85,7 @@ fun FeedScreen(
 @Composable
 fun FeedScreenContent(
     state: FeedState,
-    onGoToSelfStories: () -> Unit,
+    onGoToSelfStories: (FeedStory) -> Unit,
     onGoToStories: (FeedStory) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -104,7 +106,7 @@ fun FeedScreenContent(
                     feedStory = feedStory,
                     onClick = {
                         if (feedStory.isAccountOwner) {
-                            onGoToSelfStories()
+                            onGoToSelfStories(feedStory)
                         } else {
                             onGoToStories(feedStory)
                         }

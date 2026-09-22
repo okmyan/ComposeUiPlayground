@@ -3,7 +3,6 @@ package com.okmyan.composeuiplayground.features.instagram.di
 import com.okmyan.composeuiplayground.features.instagram.data.StoriesRepository
 import com.okmyan.composeuiplayground.features.instagram.data.UsersRepository
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetFeedStoriesUseCase
-import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetSelfStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetStoriesByOwnerUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.MuteUserUseCase
@@ -22,14 +21,19 @@ val instagramModule = module {
     singleOf(::StoriesRepository)
 
     factoryOf(::GetFeedStoriesUseCase)
-    factoryOf(::GetSelfStoriesUseCase)
     factoryOf(::GetStoriesByOwnerUseCase)
     factoryOf(::SeeStoriesUseCase)
     factoryOf(::LikeStoriesUseCase)
     factoryOf(::MuteUserUseCase)
 
     viewModelOf(::FeedViewModel)
-    viewModelOf(::AccountOwnerStoryViewModel)
+    viewModel { params ->
+        AccountOwnerStoryViewModel(
+            accountOwnerId = params.get(),
+            getStoriesByOwnerUseCase = get(),
+            seeStoriesUseCase = get(),
+        )
+    }
     viewModel { params ->
         StoryViewModel(
             selectedStoryOwnerId = params.get(),

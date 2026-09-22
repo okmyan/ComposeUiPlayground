@@ -22,7 +22,9 @@ sealed interface Route : NavKey {
         ) : Route
 
         @Serializable
-        data object AccountOwnerStory : Route
+        data class AccountOwnerStory(
+            val accountOwnerId: Long,
+        ) : Route
     }
 
     @Serializable

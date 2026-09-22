@@ -37,6 +37,7 @@ fun Header(
     onOptionsClick: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    isPageActive: Boolean = true,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -51,6 +52,7 @@ fun Header(
                 user = user,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedVisibilityScope = animatedVisibilityScope,
+                isPageActive = isPageActive,
             )
 
             val title = if (user.isAccountOwner) {
@@ -81,6 +83,7 @@ fun Avatar(
     user: InstagramUser,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    isPageActive: Boolean,
 ) = user.run {
     val contentDescription = if (isAccountOwner) {
         stringResource(R.string.instagram_your_avatar_description)
@@ -100,7 +103,13 @@ fun Avatar(
             modifier = Modifier
                 .size(35.dp)
                 .sharedBounds(
-                    sharedContentState = rememberSharedContentState(key = "user_${id}"),
+                    sharedContentState = rememberSharedContentState(
+                        key = "user_${id}",
+                        config = object : SharedTransitionScope.SharedContentConfig {
+                            override val SharedTransitionScope.SharedContentState.isEnabled: Boolean
+                                get() = isPageActive
+                        }
+                    ),
                     animatedVisibilityScope = animatedVisibilityScope,
                     clipInOverlayDuringTransition = OverlayClip(CircleShape)
                 )

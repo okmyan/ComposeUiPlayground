@@ -7,7 +7,6 @@ import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetStor
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.MuteUserUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
-import com.okmyan.composeuiplayground.features.instagram.utils.getActiveStoryIndex
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentMap
@@ -24,11 +23,14 @@ import kotlin.time.Duration.Companion.seconds
 
 class StoryViewModel(
     private val selectedStoryOwnerId: Long,
-    private val getStoriesByOwnerUseCase: GetStoriesByOwnerUseCase,
-    private val seeStoriesUseCase: SeeStoriesUseCase,
+    getStoriesByOwnerUseCase: GetStoriesByOwnerUseCase,
+    seeStoriesUseCase: SeeStoriesUseCase,
     private val likeStoriesUseCase: LikeStoriesUseCase,
     private val muteUserUseCase: MuteUserUseCase,
 ) : ViewModel() {
+
+    private val storyNavigationDelegate =
+        StoryNavigationDelegate(getStoriesByOwnerUseCase, seeStoriesUseCase)
 
     private val _uiState = MutableStateFlow(StoryState())
     val uiState = _uiState.asStateFlow()
@@ -46,46 +48,12 @@ class StoryViewModel(
     }
 
     private suspend fun getStoriesByOwner() {
-        val userWithStories = getStoriesByOwnerUseCase(selectedStoryOwnerId)
-
-        // If the user opens the stories that already watched, we show them again
-        val stories = if (userWithStories.allStoriesSeen) {
-            userWithStories.stories.map {
-                it.copy(isSeen = false)
-            }
-        } else {
-            userWithStories.stories
-        }.toImmutableList()
+        val (user, stories, activeIndex) = storyNavigationDelegate.loadStories(selectedStoryOwnerId)
 
         _uiState.value = _uiState.value.copy(
-            storyOwner = userWithStories.user,
-            stories = stories
-        )
-
-        updateActiveStoryIndex()
-    }
-
-    fun onStorySeen(storyId: Long) {
-        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStorySeen (${selectedStoryOwnerId} $storyId)")) {
-            seeStoriesUseCase(storyId)
-        }
-    }
-
-    fun onStoryLiked(storyId: Long) {
-        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStoryLiked (${selectedStoryOwnerId} $storyId)")) {
-            likeStoriesUseCase(storyId)
-        }
-
-        _uiState.value = _uiState.value.copy(
-            stories = _uiState.value.stories.map { story ->
-                story.copy(
-                    isLiked = if (story.id == _uiState.value.activeStory.id) {
-                        !story.isLiked
-                    } else {
-                        story.isLiked
-                    }
-                )
-            }.toImmutableList()
+            storyOwner = user,
+            stories = stories,
+            activeStoryIndex = activeIndex
         )
     }
 
@@ -103,6 +71,24 @@ class StoryViewModel(
             enteredMessage = _uiState.value.enteredMessage.toPersistentMap().removing(storyId)
         )
         sendNotification(StoryNotificationType.MESSAGE_SENT)
+    }
+
+    fun onStoryLiked(storyId: Long) {
+        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStoryLiked (${selectedStoryOwnerId} $storyId)")) {
+            likeStoriesUseCase(storyId)
+        }
+
+        _uiState.value = _uiState.value.copy(
+            stories = _uiState.value.stories.map { story ->
+                story.copy(
+                    isLiked = if (story.id == storyId) {
+                        !story.isLiked
+                    } else {
+                        story.isLiked
+                    }
+                )
+            }.toImmutableList()
+        )
     }
 
     fun onMute() {
@@ -139,26 +125,45 @@ class StoryViewModel(
             }
     }
 
-    fun onStoryEnded(seenStoryIndex: Int) {
-        val stories = _uiState.value.stories.mapIndexed { index, story ->
-            if (index == seenStoryIndex) {
-                story.copy(isSeen = true)
-            } else {
-                story
-            }
+    fun onStorySeen(storyId: Long) {
+        viewModelScope.launch(CoroutineName("InstagramStoryViewModel - onStorySeen (${selectedStoryOwnerId} - $storyId)")) {
+            storyNavigationDelegate.onStorySeen(storyId)
         }
-        _uiState.value = _uiState.value.copy(
-            stories = stories.toPersistentList(),
-        )
-        updateActiveStoryIndex()
     }
 
-    private fun updateActiveStoryIndex() {
-        val activeStoryIndex = getActiveStoryIndex(_uiState.value.stories)
+    fun onGoToPrevStory(): Boolean {
+        Timber.d("Go to prev story")
+        val isActiveStoryFirstOne = _uiState.value.isActiveStoryFirstOne
+        val (newIndex, updatedStories) = storyNavigationDelegate.handlePrevStory(
+            stories = _uiState.value.stories,
+            activeStoryIndex = _uiState.value.activeStoryIndex,
+            isActiveStoryFirstOne = isActiveStoryFirstOne
+        )
 
         _uiState.value = _uiState.value.copy(
-            activeStoryIndex = activeStoryIndex,
+            activeStoryIndex = newIndex,
+            stories = updatedStories.toPersistentList(),
         )
+
+        return !isActiveStoryFirstOne
+    }
+
+    fun onGoToNextStory(): Boolean {
+        if (_uiState.value.isActiveStoryLastOne) {
+            return false
+        }
+        Timber.d("Go to next story")
+
+        val result = storyNavigationDelegate.handleNextStory(
+            stories = _uiState.value.stories,
+            activeStoryIndex = _uiState.value.activeStoryIndex,
+        )
+
+        _uiState.value = _uiState.value.copy(
+            activeStoryIndex = result.first,
+            stories = result.second.toPersistentList(),
+        )
+        return true
     }
 
     override fun onCleared() {

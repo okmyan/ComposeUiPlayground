@@ -19,12 +19,16 @@ import com.okmyan.composeuiplayground.features.instagram.screens.accountownersto
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Header
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Stories
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 
 @Composable
 fun AccountOwnerStoryScreen(
-    onStoriesEnd: () -> Unit,
-    viewModel: AccountOwnerStoryViewModel = koinViewModel(),
+    accountOwnerId: Long,
+    viewModel: AccountOwnerStoryViewModel = koinViewModel(key = accountOwnerId.toString()) {
+        parametersOf(accountOwnerId)
+    },
+    closeStory: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
@@ -34,6 +38,13 @@ fun AccountOwnerStoryScreen(
     var showOptions by remember { mutableStateOf(false) }
 
     val isStoryContinuous = !showOptions
+
+    val onGoToNextStory = {
+        if (!viewModel.onGoToNextStory()) {
+            Timber.d("Close stories")
+            closeStory()
+        }
+    }
 
     with(sharedTransitionScope) {
         Box(
@@ -55,20 +66,11 @@ fun AccountOwnerStoryScreen(
                         stories = state.stories,
                         activeStoryIndex = state.activeStoryIndex,
                         isPageActive = true,
-                        onStorySeen = viewModel::onStorySeen,
-                        onGoToPrevStory = {},
-                        onGoToNextStory = {},
-                        onGoToPrevUserStories = {},
-                        onGoToNextUserStories = {},
+                        onGoToPrevStory = { viewModel.onGoToPrevStory() },
+                        onGoToNextStory = onGoToNextStory,
                         isContinuous = isStoryContinuous,
-                        onStoryEnded = {
-                            if (state.isActiveStoryLastOne) {
-                                Timber.d("Story ended")
-                                onStoriesEnd()
-                            } else {
-                                viewModel.onStoryEnded(it)
-                            }
-                        },
+                        onStoryOpened = viewModel::onStorySeen,
+                        onStoryEnded = onGoToNextStory,
                     )
                     Header(
                         modifier = Modifier.padding(

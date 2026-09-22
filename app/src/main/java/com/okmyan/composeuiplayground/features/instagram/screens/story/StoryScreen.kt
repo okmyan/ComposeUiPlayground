@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,8 +39,8 @@ fun StoryScreen(
     },
     isContinuous: Boolean,
     isPageActive: Boolean = true,
-    onGoToPrevious: () -> Unit,
-    onGoToNext: () -> Unit,
+    onGoToPrevUserStories: () -> Unit,
+    onGoToNextUserStories: () -> Unit,
     onScrollAbilityChange: (Boolean) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -79,12 +78,25 @@ fun StoryScreen(
         .fillMaxWidth()
         .padding(8.dp)
 
+    val onGoToNextStory = {
+        if (!viewModel.onGoToNextStory()) {
+            Timber.d("go to next user $selectedStoryOwnerId")
+            onGoToNextUserStories()
+        }
+    }
+
     with(sharedTransitionScope) {
         Box(
             modifier = modifier
                 .fillMaxSize()
                 .sharedBounds(
-                    sharedContentState = rememberSharedContentState(key = "container_${selectedStoryOwnerId}"),
+                    sharedContentState = rememberSharedContentState(
+                        key = "container_${selectedStoryOwnerId}",
+                        config = object : SharedTransitionScope.SharedContentConfig {
+                            override val SharedTransitionScope.SharedContentState.isEnabled: Boolean
+                                get() = isPageActive
+                        }
+                    ),
                     animatedVisibilityScope = animatedVisibilityScope,
                 ),
             contentAlignment = Alignment.BottomCenter,
@@ -99,20 +111,15 @@ fun StoryScreen(
                         stories = state.stories,
                         activeStoryIndex = state.activeStoryIndex,
                         isPageActive = isPageActive,
-                        onStorySeen = viewModel::onStorySeen,
-                        onGoToPrevStory = {},
-                        onGoToNextStory = {},
-                        onGoToPrevUserStories = onGoToPrevious,
-                        onGoToNextUserStories = onGoToNext,
-                        isContinuous = isStoryContinuous,
-                        onStoryEnded = {
-                            if (state.isActiveStoryLastOne) {
-                                Timber.d("go to next $selectedStoryOwnerId")
-                                onGoToNext()
-                            } else {
-                                viewModel.onStoryEnded(it)
+                        onGoToPrevStory = {
+                            if (!viewModel.onGoToPrevStory()) {
+                                onGoToPrevUserStories()
                             }
                         },
+                        onGoToNextStory = onGoToNextStory,
+                        isContinuous = isStoryContinuous,
+                        onStoryOpened = viewModel::onStorySeen,
+                        onStoryEnded = onGoToNextStory,
                     )
                     Header(
                         modifier = Modifier.padding(
@@ -124,6 +131,7 @@ fun StoryScreen(
                         onOptionsClick = { showOptions = true },
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
+                        isPageActive = isPageActive,
                     )
                 }
 
