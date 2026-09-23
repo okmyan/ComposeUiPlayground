@@ -1,5 +1,6 @@
 package com.okmyan.composeuiplayground.features.instagram.screens.story.components
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,11 +67,10 @@ fun LinearDeterminateIndicator(
         }
     }
 
-    Timber.d("storyId: $storyId - currentProgress: $currentProgress, isLoaded: $isLoaded, restartTrigger: $restartTrigger")
-
     LinearProgressIndicator(
         progress = { currentProgress },
-        modifier = modifier,
+        modifier = modifier
+            .height(2.dp),
         color = Color.White,
         trackColor = Color.LightGray,
         gapSize = 0.dp,

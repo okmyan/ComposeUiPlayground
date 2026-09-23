@@ -2,11 +2,14 @@ package com.okmyan.composeuiplayground.features.instagram.screens.accountownerst
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,6 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.okmyan.composeuiplayground.features.instagram.screens.accountownerstory.components.AccountOwnerStoryBottomSheet
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Header
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Stories
+import com.okmyan.composeuiplayground.features.instagram.utils.HIDE_STORY_ELEMENTS_DELAY
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import timber.log.Timber
@@ -37,7 +42,25 @@ fun AccountOwnerStoryScreen(
 
     var showOptions by remember { mutableStateOf(false) }
 
-    val isStoryContinuous = !showOptions
+    var isStoryMoving by remember(state.activeStoryId) { mutableStateOf(false) }
+
+    var isStoryPressing by remember(state.activeStoryId) { mutableStateOf(false) }
+    var showStoryElements by remember(state.activeStoryId) { mutableStateOf(true) }
+    val storyElementsAlpha by animateFloatAsState(
+        targetValue = if (showStoryElements) 1f else 0f,
+        animationSpec = tween(300),
+    )
+
+    LaunchedEffect(isStoryPressing) {
+        if (isStoryPressing) {
+            delay(HIDE_STORY_ELEMENTS_DELAY)
+            showStoryElements = false
+        } else {
+            showStoryElements = true
+        }
+    }
+
+    val isStoryContinuous = !showOptions && !isStoryPressing
 
     val onGoToNextStory = {
         if (!viewModel.onGoToNextStory()) {
@@ -66,6 +89,13 @@ fun AccountOwnerStoryScreen(
                         stories = state.stories,
                         activeStoryIndex = state.activeStoryIndex,
                         isPageActive = true,
+                        storyElementsAlpha = storyElementsAlpha,
+                        onPress = { isStoryPressing = true },
+                        onPressRelease = { isStoryPressing = false },
+                        isMovingEnabled = showStoryElements,
+                        onMove = { isStoryMoving = true },
+                        onMoveRelease = { isStoryMoving = false },
+                        onDragUp = {},
                         onGoToPrevStory = { viewModel.onGoToPrevStory() },
                         onGoToNextStory = onGoToNextStory,
                         isContinuous = isStoryContinuous,

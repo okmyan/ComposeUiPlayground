@@ -10,13 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +28,8 @@ import com.okmyan.composeuiplayground.features.instagram.screens.story.component
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.StoryBottomSheet
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.StoryNotificationPopup
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Tail
+import com.okmyan.composeuiplayground.features.instagram.utils.HIDE_STORY_ELEMENTS_DELAY
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import timber.log.Timber
@@ -58,21 +61,32 @@ fun StoryScreen(
         animationSpec = tween(300),
     )
 
-    DisposableEffect(isMessageEditing) {
-        onScrollAbilityChange(!isMessageEditing)
+    var showOptionsBottomSheet by remember { mutableStateOf(false) }
 
-        onDispose {
-            // If the screen is destroyed while editing,
-            // ensure we leave the pager in a "clean" (scrollable) state
-            if (isMessageEditing) {
-                onScrollAbilityChange(true)
-            }
+    var isStoryMoving by remember(state.activeStoryId) { mutableStateOf(false) }
+    var isStoryPressing by remember(state.activeStoryId) { mutableStateOf(false) }
+    var showStoryElements by remember(state.activeStoryId) { mutableStateOf(true) }
+    val storyElementsAlpha by animateFloatAsState(
+        targetValue = if (showStoryElements) 1f else 0f,
+        animationSpec = tween(300),
+    )
+
+    LaunchedEffect(isStoryPressing) {
+        if (isStoryPressing) {
+            delay(HIDE_STORY_ELEMENTS_DELAY)
+            showStoryElements = false
+        } else {
+            showStoryElements = true
         }
     }
 
-    var showOptions by remember { mutableStateOf(false) }
+    val isHorizontalScrollAllowed = !isMessageEditing && !isStoryMoving && !isStoryPressing
+    LaunchedEffect(isHorizontalScrollAllowed) {
+        onScrollAbilityChange(isHorizontalScrollAllowed)
+    }
 
-    val isStoryContinuous = isContinuous && !isMessageEditing && !showOptions
+    val isStoryContinuous =
+        isContinuous && !isMessageEditing && !showOptionsBottomSheet && !isStoryMoving && !isStoryPressing
 
     val messageFieldModifier = Modifier
         .fillMaxWidth()
@@ -111,6 +125,13 @@ fun StoryScreen(
                         stories = state.stories,
                         activeStoryIndex = state.activeStoryIndex,
                         isPageActive = isPageActive,
+                        storyElementsAlpha = storyElementsAlpha,
+                        onPress = { isStoryPressing = true },
+                        onPressRelease = { isStoryPressing = false },
+                        isMovingEnabled = showStoryElements,
+                        onMove = { isStoryMoving = true },
+                        onMoveRelease = { isStoryMoving = false },
+                        onDragUp = { isMessageEditing = true },
                         onGoToPrevStory = {
                             if (!viewModel.onGoToPrevStory()) {
                                 onGoToPrevUserStories()
@@ -122,13 +143,12 @@ fun StoryScreen(
                         onStoryEnded = onGoToNextStory,
                     )
                     Header(
-                        modifier = Modifier.padding(
-                            horizontal = 10.dp,
-                            vertical = 20.dp
-                        ),
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp, vertical = 20.dp)
+                            .alpha(storyElementsAlpha),
                         user = state.storyOwner,
                         activeStory = state.activeStory,
-                        onOptionsClick = { showOptions = true },
+                        onOptionsClick = { showOptionsBottomSheet = true },
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
                         isPageActive = isPageActive,
@@ -136,11 +156,12 @@ fun StoryScreen(
                 }
 
                 Tail(
-                    modifier = messageFieldModifier,
+                    modifier = messageFieldModifier
+                        .alpha(storyElementsAlpha),
                     onMessageEditing = { isMessageEditing = true },
                     message = enteredMessage.text,
                     isLiked = state.activeStory.isLiked,
-                    onLike = { viewModel.onStoryLiked(state.activeStory.id) },
+                    onLike = { viewModel.onStoryLiked(state.activeStoryId) },
                 )
             }
 
@@ -150,10 +171,10 @@ fun StoryScreen(
 
             StoryNotificationPopup(notification)
 
-            if (showOptions) {
+            if (showOptionsBottomSheet) {
                 StoryBottomSheet(
                     isMuted = state.storyOwner.isMuted,
-                    onDismiss = { showOptions = false },
+                    onDismiss = { showOptionsBottomSheet = false },
                     onReport = viewModel::onReport,
                     onMute = viewModel::onMute,
                 )

@@ -35,6 +35,7 @@ class StoryViewModel(
     private val _uiState = MutableStateFlow(StoryState())
     val uiState = _uiState.asStateFlow()
 
+    // We use shared flow to be able to send repeated events to the UI
     private var notificationsJob: Job? = null
     private val _notifications = MutableSharedFlow<StoryNotification>()
     val notifications = _notifications.asSharedFlow()

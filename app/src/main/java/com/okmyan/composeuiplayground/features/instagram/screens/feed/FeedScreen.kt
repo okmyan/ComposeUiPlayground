@@ -30,8 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.okmyan.composeuiplayground.features.instagram.domain.model.FeedStory
-import com.okmyan.composeuiplayground.features.instagram.screens.feed.components.FeedStory
 import com.okmyan.composeuiplayground.features.instagram.screens.components.PreloadUsersWithStories
+import com.okmyan.composeuiplayground.features.instagram.screens.feed.components.FeedStory
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

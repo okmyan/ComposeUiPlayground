@@ -36,7 +36,7 @@ fun <T : NavKey> rememberNavigationState(
     }
 
     @Suppress("UNCHECKED_CAST")
-    val backStacks = topLevelRoutes.associateWith { key -> 
+    val backStacks = topLevelRoutes.associateWith { key ->
         rememberNavBackStack(key) as NavBackStack<T>
     }
 

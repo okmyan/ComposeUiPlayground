@@ -5,13 +5,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -38,7 +39,6 @@ import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramStory
 import com.okmyan.composeuiplayground.features.instagram.screens.components.PreloadStory
 import com.okmyan.composeuiplayground.utils.extensions.mirror
-import com.okmyan.composeuiplayground.utils.extensions.noRippleClickable
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -46,6 +46,13 @@ fun Stories(
     stories: ImmutableList<InstagramStory>,
     activeStoryIndex: Int,
     isPageActive: Boolean,
+    storyElementsAlpha: Float,
+    onPress: () -> Unit,
+    onPressRelease: () -> Unit,
+    isMovingEnabled: Boolean,
+    onMove: () -> Unit,
+    onMoveRelease: () -> Unit,
+    onDragUp: () -> Unit,
     onGoToPrevStory: () -> Unit,
     onGoToNextStory: () -> Unit,
     isContinuous: Boolean,
@@ -65,11 +72,6 @@ fun Stories(
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
-        StoryGestures(
-            onLeftClick = { onGoToPrevStory() },
-            onRightClick = { onGoToNextStory() },
-        )
-
         activeStory.run {
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -84,15 +86,29 @@ fun Stories(
                 loading = { StoriesLoading() },
                 error = { StoriesError { painter.restart() } },
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(5.dp)),
                 contentScale = ContentScale.Crop
             )
         }
 
+        StoryGestures(
+            onPress = onPress,
+            onPressRelease = onPressRelease,
+            isMovingEnabled = isMovingEnabled,
+            onMove = onMove,
+            onMoveRelease = onMoveRelease,
+            onDragUp = onDragUp,
+            onLeftClick = onGoToPrevStory,
+            onRightClick = onGoToNextStory,
+        )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp),
+                .padding(horizontal = 5.dp, vertical = 8.dp)
+                .alpha(storyElementsAlpha),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -116,32 +132,6 @@ fun Stories(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun StoryGestures(
-    onLeftClick: () -> Unit,
-    onRightClick: () -> Unit,
-) {
-    Row(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(0.33f)
-                .noRippleClickable(
-                    onClick = onLeftClick
-                )
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(0.67f)
-                .noRippleClickable(
-                    onClick = onRightClick
-                )
-        )
     }
 }
 

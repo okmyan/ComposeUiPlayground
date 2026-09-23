@@ -55,8 +55,7 @@ fun InstagramNavDisplay(
                         },
                         onGoToStories = { selectedStoryOwnerId, storyOwnerIds ->
                             navigator.navigate(
-                                InstagramStoryGraph(selectedStoryOwnerId, storyOwnerIds),
-                                unique = true,
+                                InstagramStoryGraph(selectedStoryOwnerId, storyOwnerIds)
                             )
                         },
                         sharedTransitionScope = this@SharedTransitionLayout,
