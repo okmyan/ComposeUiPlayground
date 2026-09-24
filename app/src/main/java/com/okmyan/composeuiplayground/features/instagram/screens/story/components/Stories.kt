@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,7 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -47,8 +51,8 @@ fun Stories(
     activeStoryIndex: Int,
     isPageActive: Boolean,
     storyElementsAlpha: Float,
-    onPress: () -> Unit,
-    onPressRelease: () -> Unit,
+    onLongPressOrZoom: () -> Unit,
+    onLongPressOrZoomRelease: () -> Unit,
     isMovingEnabled: Boolean,
     onMove: () -> Unit,
     onMoveRelease: () -> Unit,
@@ -69,6 +73,9 @@ fun Stories(
         PreloadStory(it)
     }
 
+    var zoom by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -88,18 +95,29 @@ fun Stories(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(5.dp)),
+                    .clip(RoundedCornerShape(5.dp))
+                    .graphicsLayer {
+                        scaleX = zoom
+                        scaleY = zoom
+                        translationX = -offset.x * zoom
+                        translationY = -offset.y * zoom
+                        transformOrigin = TransformOrigin(0f, 0f)
+                    },
                 contentScale = ContentScale.Crop
             )
         }
 
         StoryGestures(
-            onPress = onPress,
-            onPressRelease = onPressRelease,
+            onLongPressOrZoom = onLongPressOrZoom,
+            onLongPressOrZoomRelease = onLongPressOrZoomRelease,
             isMovingEnabled = isMovingEnabled,
             onMove = onMove,
             onMoveRelease = onMoveRelease,
             onDragUp = onDragUp,
+            onTransformation = { transformedZoom, transformedOffset ->
+                zoom = transformedZoom
+                offset = transformedOffset
+            },
             onLeftClick = onGoToPrevStory,
             onRightClick = onGoToNextStory,
         )

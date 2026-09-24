@@ -61,18 +61,17 @@ fun StoryScreen(
         animationSpec = tween(300),
     )
 
-    var showOptionsBottomSheet by remember { mutableStateOf(false) }
-
     var isStoryMoving by remember(state.activeStoryId) { mutableStateOf(false) }
-    var isStoryPressing by remember(state.activeStoryId) { mutableStateOf(false) }
+    var isStoryLongPressingOrZooming by remember(state.activeStoryId) { mutableStateOf(false) }
+
     var showStoryElements by remember(state.activeStoryId) { mutableStateOf(true) }
     val storyElementsAlpha by animateFloatAsState(
         targetValue = if (showStoryElements) 1f else 0f,
         animationSpec = tween(300),
     )
 
-    LaunchedEffect(isStoryPressing) {
-        if (isStoryPressing) {
+    LaunchedEffect(isStoryLongPressingOrZooming) {
+        if (isStoryLongPressingOrZooming) {
             delay(HIDE_STORY_ELEMENTS_DELAY)
             showStoryElements = false
         } else {
@@ -80,13 +79,16 @@ fun StoryScreen(
         }
     }
 
-    val isHorizontalScrollAllowed = !isMessageEditing && !isStoryMoving && !isStoryPressing
+    val isHorizontalScrollAllowed =
+        !isMessageEditing && !isStoryMoving && !isStoryLongPressingOrZooming
     LaunchedEffect(isHorizontalScrollAllowed) {
         onScrollAbilityChange(isHorizontalScrollAllowed)
     }
 
+    var showOptionsBottomSheet by remember { mutableStateOf(false) }
+
     val isStoryContinuous =
-        isContinuous && !isMessageEditing && !showOptionsBottomSheet && !isStoryMoving && !isStoryPressing
+        isContinuous && !isMessageEditing && !showOptionsBottomSheet && !isStoryMoving && !isStoryLongPressingOrZooming
 
     val messageFieldModifier = Modifier
         .fillMaxWidth()
@@ -126,8 +128,8 @@ fun StoryScreen(
                         activeStoryIndex = state.activeStoryIndex,
                         isPageActive = isPageActive,
                         storyElementsAlpha = storyElementsAlpha,
-                        onPress = { isStoryPressing = true },
-                        onPressRelease = { isStoryPressing = false },
+                        onLongPressOrZoom = { isStoryLongPressingOrZooming = true },
+                        onLongPressOrZoomRelease = { isStoryLongPressingOrZooming = false },
                         isMovingEnabled = showStoryElements,
                         onMove = { isStoryMoving = true },
                         onMoveRelease = { isStoryMoving = false },

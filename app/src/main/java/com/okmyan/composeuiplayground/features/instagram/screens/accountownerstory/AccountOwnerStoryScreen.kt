@@ -40,19 +40,17 @@ fun AccountOwnerStoryScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var showOptions by remember { mutableStateOf(false) }
-
     var isStoryMoving by remember(state.activeStoryId) { mutableStateOf(false) }
+    var isStoryLongPressingOrZooming by remember(state.activeStoryId) { mutableStateOf(false) }
 
-    var isStoryPressing by remember(state.activeStoryId) { mutableStateOf(false) }
     var showStoryElements by remember(state.activeStoryId) { mutableStateOf(true) }
     val storyElementsAlpha by animateFloatAsState(
         targetValue = if (showStoryElements) 1f else 0f,
         animationSpec = tween(300),
     )
 
-    LaunchedEffect(isStoryPressing) {
-        if (isStoryPressing) {
+    LaunchedEffect(isStoryLongPressingOrZooming) {
+        if (isStoryLongPressingOrZooming) {
             delay(HIDE_STORY_ELEMENTS_DELAY)
             showStoryElements = false
         } else {
@@ -60,7 +58,10 @@ fun AccountOwnerStoryScreen(
         }
     }
 
-    val isStoryContinuous = !showOptions && !isStoryPressing
+    var showOptionsBottomSheet by remember { mutableStateOf(false) }
+
+    val isStoryContinuous =
+        !showOptionsBottomSheet && !isStoryMoving && !isStoryLongPressingOrZooming
 
     val onGoToNextStory = {
         if (!viewModel.onGoToNextStory()) {
@@ -90,8 +91,8 @@ fun AccountOwnerStoryScreen(
                         activeStoryIndex = state.activeStoryIndex,
                         isPageActive = true,
                         storyElementsAlpha = storyElementsAlpha,
-                        onPress = { isStoryPressing = true },
-                        onPressRelease = { isStoryPressing = false },
+                        onLongPressOrZoom = { isStoryLongPressingOrZooming = true },
+                        onLongPressOrZoomRelease = { isStoryLongPressingOrZooming = false },
                         isMovingEnabled = showStoryElements,
                         onMove = { isStoryMoving = true },
                         onMoveRelease = { isStoryMoving = false },
@@ -109,16 +110,16 @@ fun AccountOwnerStoryScreen(
                         ),
                         user = state.storyOwner,
                         activeStory = state.activeStory,
-                        onOptionsClick = { showOptions = true },
+                        onOptionsClick = { showOptionsBottomSheet = true },
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
                     )
                 }
             }
 
-            if (showOptions) {
+            if (showOptionsBottomSheet) {
                 AccountOwnerStoryBottomSheet(
-                    onDismiss = { showOptions = false },
+                    onDismiss = { showOptionsBottomSheet = false },
                     onDelete = {}, // TODO implement
                     onArchive = {},
                 )
