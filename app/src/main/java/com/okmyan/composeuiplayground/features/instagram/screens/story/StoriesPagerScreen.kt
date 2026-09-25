@@ -2,6 +2,7 @@ package com.okmyan.composeuiplayground.features.instagram.screens.story
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_THRESHOLD
+import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_TRANSITION_Y_RATIO
+import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_ZOOM_RATIO
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -27,6 +31,7 @@ fun StoriesPagerScreen(
     selectedStoryOwnerId: Long,
     storyOwnerIds: List<Long>,
     onStoriesEnd: () -> Unit,
+    closeStory: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier
@@ -67,10 +72,20 @@ fun StoriesPagerScreen(
             }
         }
 
+        val coroutineScope = rememberCoroutineScope()
+        val animatedZoom = remember { Animatable(1f) }
+        val animatedDragTranslationY = remember { Animatable(0f) }
+
         var scrollEnabled by remember { mutableStateOf(true) }
         HorizontalPager(
             state = pagerState,
             userScrollEnabled = scrollEnabled,
+            modifier = Modifier
+                .graphicsLayer {
+                    scaleX = animatedZoom.value
+                    scaleY = animatedZoom.value
+                    translationY = animatedDragTranslationY.value
+                }
         ) { pageIndex ->
             Box(
                 contentAlignment = Alignment.Center,
@@ -104,6 +119,37 @@ fun StoriesPagerScreen(
                     isPageActive = pagerState.currentPage == pageIndex,
                     onGoToPrevUserStories = goToPrevPage,
                     onGoToNextUserStories = goToNextPage,
+                    onDragDown = { translation ->
+                        coroutineScope.launch {
+                            animatedDragTranslationY.snapTo(
+                                animatedDragTranslationY.value + translation * DRAG_DOWN_TRANSITION_Y_RATIO
+                            )
+                            animatedZoom.snapTo(
+                                animatedZoom.value - translation * DRAG_DOWN_ZOOM_RATIO
+                            )
+                        }
+                        Timber.d("onDragDown: ${animatedDragTranslationY.value}")
+                    },
+                    onDragDownRelease = {
+                        coroutineScope.launch {
+                            if (animatedDragTranslationY.value <= DRAG_DOWN_THRESHOLD) {
+                                launch {
+                                    animatedZoom.animateTo(
+                                        targetValue = 1f,
+                                        animationSpec = tween(300),
+                                    )
+                                }
+                                launch {
+                                    animatedDragTranslationY.animateTo(
+                                        targetValue = 0f,
+                                        animationSpec = tween(300),
+                                    )
+                                }
+                            } else {
+                                closeStory()
+                            }
+                        }
+                    },
                     onScrollAbilityChange = { scrollEnabled = it },
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,

@@ -44,6 +44,8 @@ fun StoryScreen(
     isPageActive: Boolean = true,
     onGoToPrevUserStories: () -> Unit,
     onGoToNextUserStories: () -> Unit,
+    onDragDown: (Float) -> Unit,
+    onDragDownRelease: () -> Unit,
     onScrollAbilityChange: (Boolean) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -134,6 +136,8 @@ fun StoryScreen(
                         onMove = { isStoryMoving = true },
                         onMoveRelease = { isStoryMoving = false },
                         onDragUp = { isMessageEditing = true },
+                        onDragDown = onDragDown,
+                        onDragDownRelease = onDragDownRelease,
                         onGoToPrevStory = {
                             if (!viewModel.onGoToPrevStory()) {
                                 onGoToPrevUserStories()

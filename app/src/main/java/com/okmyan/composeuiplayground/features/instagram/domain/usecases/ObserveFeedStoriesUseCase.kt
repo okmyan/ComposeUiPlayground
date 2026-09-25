@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 
-class GetFeedStoriesUseCase(
+class ObserveFeedStoriesUseCase(
     private val usersRepository: UsersRepository,
     private val storiesRepository: StoriesRepository,
 ) {
@@ -28,16 +28,8 @@ class GetFeedStoriesUseCase(
                         hasNonSeenStories = hasNonSeenStories,
                     )
                 }
-                    .sortedWith(STORY_COMPARATOR)
             }
             .flowOn(Dispatchers.Default)
-    }
-
-    companion object {
-        private val STORY_COMPARATOR =
-            compareByDescending<FeedStory> { it.storyOwner.isAccountOwner }
-                .thenByDescending { it.hasNonSeenStories }
-                .thenBy { it.isMuted }
     }
 
 }

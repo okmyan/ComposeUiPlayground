@@ -39,6 +39,8 @@ fun StoryGestures(
     onMove: () -> Unit,
     onMoveRelease: () -> Unit,
     onDragUp: () -> Unit,
+    onDragDown: (Float) -> Unit,
+    onDragDownRelease: () -> Unit,
     onTransformation: (Float, Offset) -> Unit,
     onLeftClick: () -> Unit,
     onRightClick: () -> Unit,
@@ -50,14 +52,19 @@ fun StoryGestures(
     val currentOnMove by rememberUpdatedState(onMove)
     val currentOnMoveRelease by rememberUpdatedState(onMoveRelease)
     val currentOnDragUp by rememberUpdatedState(onDragUp)
+    val currentOnDragDown by rememberUpdatedState(onDragDown)
+    val currentOnDragDownRelease by rememberUpdatedState(onDragDownRelease)
     val currentOnLeftClick by rememberUpdatedState(onLeftClick)
     val currentOnRightClick by rememberUpdatedState(onRightClick)
 
     // Enable tapping only if didn't register the long press
     var isTapAllowed by remember { mutableStateOf(false) }
+
     // Prevents multiple triggers
     var hasTriggeredDragUp by remember { mutableStateOf(false) }
-    var accumulatedYDragAmount by remember { mutableFloatStateOf(0f) }
+    var hasTriggeredDragDown by remember { mutableStateOf(false) }
+    var accumulatedYDragUpAmount by remember { mutableFloatStateOf(0f) }
+    var accumulatedYDragDownAmount by remember { mutableFloatStateOf(0f) }
 
     var offset by remember { mutableStateOf(Offset.Zero) }
     var zoom by remember { mutableFloatStateOf(1f) }
@@ -126,30 +133,54 @@ fun StoryGestures(
                     Timber.tag("StoryGestures.drag").d("onDragStart")
                     // Reset flags in the beginning of the gesture
                     hasTriggeredDragUp = false
-                    accumulatedYDragAmount = 0f
+                    hasTriggeredDragDown = false
+                    accumulatedYDragUpAmount = 0f
+                    accumulatedYDragDownAmount = 0f
                 },
                 onVerticalDrag = { change, dragAmount ->
-                    Timber.tag("StoryGestures.drag").d("onVerticalDrag - dragAmount: $dragAmount")
+                    Timber.tag("StoryGestures.drag")
+                        .d("onVerticalDrag - dragAmount: $dragAmount, accumulatedYDragUpAmount: $accumulatedYDragUpAmount, accumulatedYDragDownAmount: $accumulatedYDragDownAmount")
 
                     change.consume()
                     currentOnMove()
 
-                    if (!hasTriggeredDragUp) {
+                    if (!hasTriggeredDragUp && !hasTriggeredDragDown) {
                         if (dragAmount < 0f) {
-                            accumulatedYDragAmount += dragAmount
+                            accumulatedYDragUpAmount += dragAmount
+                            accumulatedYDragDownAmount = 0f
                         }
 
-                        if (accumulatedYDragAmount < -50f) {
+                        if (dragAmount > 0f) {
+                            accumulatedYDragUpAmount = 0f
+                            accumulatedYDragDownAmount += dragAmount
+                        }
+
+                        if (accumulatedYDragUpAmount < -50f) {
                             Timber.tag("StoryGestures.drag").d("onVerticalDrag - onDragUp")
 
                             currentOnDragUp()
                             hasTriggeredDragUp = true   // Prevent multiple triggers
                         }
+
+                        if (accumulatedYDragDownAmount > 50f) {
+                            Timber.tag("StoryGestures.drag").d("onVerticalDrag - onDragDown")
+
+                            accumulatedYDragDownAmount = 0f
+                            hasTriggeredDragDown = true
+                        }
+                    }
+
+                    if (hasTriggeredDragDown) {
+                        currentOnDragDown(dragAmount)
                     }
                 },
                 onDragEnd = {
                     Timber.tag("StoryGestures.drag").d("onDragEnd")
                     currentOnMoveRelease()
+
+                    if (hasTriggeredDragDown) {
+                        currentOnDragDownRelease()
+                    }
                 },
                 onDragCancel = {
                     Timber.tag("StoryGestures.drag").d("onDragCancel")

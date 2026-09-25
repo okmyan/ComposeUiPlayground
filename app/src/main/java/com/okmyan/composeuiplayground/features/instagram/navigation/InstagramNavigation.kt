@@ -67,6 +67,7 @@ fun InstagramNavDisplay(
                         selectedStoryOwnerId = instagramStory.selectedStoryOwnerId,
                         storyOwnerIds = instagramStory.storyOwnerIds,
                         onStoriesEnd = { navigator.goBack() },
+                        closeStory = { navigator.goBack() },
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = LocalNavAnimatedContentScope.current,
                         modifier = modifier,

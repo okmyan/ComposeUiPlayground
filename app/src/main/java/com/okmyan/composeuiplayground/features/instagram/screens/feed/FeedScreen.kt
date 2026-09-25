@@ -28,14 +28,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.okmyan.composeuiplayground.features.instagram.domain.model.FeedStory
 import com.okmyan.composeuiplayground.features.instagram.screens.components.PreloadUsersWithStories
 import com.okmyan.composeuiplayground.features.instagram.screens.feed.components.FeedStory
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -47,11 +50,23 @@ fun FeedScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
+    var sortingJob by remember { mutableStateOf<Job?>(null) }
+    LifecycleStartEffect(viewModel) {
+        sortingJob = coroutineScope.launch {
+            delay(3.seconds)
+            viewModel.sortStories()
+        }
+        onStopOrDispose {
+            sortingJob?.cancel()
+        }
+    }
+
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
 
     val preloadUserWithStories by viewModel.preloadUserWithStories.collectAsStateWithLifecycle()
     PreloadUsersWithStories(preloadUserWithStories)
@@ -61,7 +76,10 @@ fun FeedScreen(
         onRefresh = {
             coroutineScope.launch(CoroutineName("FeedScreen - onRefresh")) {
                 isRefreshing = true
-                delay(1.seconds)
+                delay(500.milliseconds)
+
+                sortingJob?.cancel()
+                viewModel.sortStories()
                 isRefreshing = false
             }
         },
@@ -102,7 +120,10 @@ fun FeedScreenContent(
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            items(state.feedStories) { feedStory ->
+            items(
+                items = state.feedStories,
+                key = { feedStory -> feedStory.storyOwnerId }
+            ) { feedStory ->
                 FeedStory(
                     feedStory = feedStory,
                     onClick = {
@@ -117,6 +138,7 @@ fun FeedScreenContent(
                     },
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,
+                    modifier = Modifier.animateItem(),
                 )
             }
         }

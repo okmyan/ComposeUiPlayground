@@ -2,11 +2,12 @@ package com.okmyan.composeuiplayground.features.instagram.di
 
 import com.okmyan.composeuiplayground.features.instagram.data.StoriesRepository
 import com.okmyan.composeuiplayground.features.instagram.data.UsersRepository
-import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetFeedStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetStoriesByOwnerUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.GetUsersWithStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.LikeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.MuteUserUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.ObserveFeedStoriesUseCase
+import com.okmyan.composeuiplayground.features.instagram.domain.usecases.ObserveSortedFeedStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.domain.usecases.SeeStoriesUseCase
 import com.okmyan.composeuiplayground.features.instagram.screens.accountownerstory.AccountOwnerStoryViewModel
 import com.okmyan.composeuiplayground.features.instagram.screens.feed.FeedViewModel
@@ -21,7 +22,8 @@ val instagramModule = module {
     singleOf(::UsersRepository)
     singleOf(::StoriesRepository)
 
-    factoryOf(::GetFeedStoriesUseCase)
+    factoryOf(::ObserveFeedStoriesUseCase)
+    factoryOf(::ObserveSortedFeedStoriesUseCase)
     factoryOf(::GetUsersWithStoriesUseCase)
     factoryOf(::GetStoriesByOwnerUseCase)
     factoryOf(::SeeStoriesUseCase)

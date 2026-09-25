@@ -2,6 +2,7 @@ package com.okmyan.composeuiplayground.features.instagram.screens.accountownerst
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -13,16 +14,22 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.okmyan.composeuiplayground.features.instagram.screens.accountownerstory.components.AccountOwnerStoryBottomSheet
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Header
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Stories
+import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_THRESHOLD
+import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_TRANSITION_Y_RATIO
+import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_ZOOM_RATIO
 import com.okmyan.composeuiplayground.features.instagram.utils.HIDE_STORY_ELEMENTS_DELAY
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import timber.log.Timber
@@ -70,6 +77,10 @@ fun AccountOwnerStoryScreen(
         }
     }
 
+    val coroutineScope = rememberCoroutineScope()
+    val animatedZoom = remember { Animatable(1f) }
+    val animatedDragTranslationY = remember { Animatable(0f) }
+
     with(sharedTransitionScope) {
         Box(
             modifier = modifier
@@ -77,7 +88,12 @@ fun AccountOwnerStoryScreen(
                 .sharedBounds(
                     sharedContentState = rememberSharedContentState(key = "container_${state.storyOwnerId}"),
                     animatedVisibilityScope = animatedVisibilityScope,
-                ),
+                )
+                .graphicsLayer {
+                    scaleX = animatedZoom.value
+                    scaleY = animatedZoom.value
+                    translationY = animatedDragTranslationY.value
+                },
             contentAlignment = Alignment.BottomCenter,
         ) {
             Column(
@@ -97,6 +113,36 @@ fun AccountOwnerStoryScreen(
                         onMove = { isStoryMoving = true },
                         onMoveRelease = { isStoryMoving = false },
                         onDragUp = {},
+                        onDragDown = { translation ->
+                            coroutineScope.launch {
+                                animatedDragTranslationY.snapTo(
+                                    animatedDragTranslationY.value + translation * DRAG_DOWN_TRANSITION_Y_RATIO
+                                )
+                                animatedZoom.snapTo(
+                                    animatedZoom.value - translation * DRAG_DOWN_ZOOM_RATIO
+                                )
+                            }
+                        },
+                        onDragDownRelease = {
+                            coroutineScope.launch {
+                                if (animatedDragTranslationY.value <= DRAG_DOWN_THRESHOLD) {
+                                    launch {
+                                        animatedZoom.animateTo(
+                                            targetValue = 1f,
+                                            animationSpec = tween(300),
+                                        )
+                                    }
+                                    launch {
+                                        animatedDragTranslationY.animateTo(
+                                            targetValue = 0f,
+                                            animationSpec = tween(300),
+                                        )
+                                    }
+                                } else {
+                                    closeStory()
+                                }
+                            }
+                        },
                         onGoToPrevStory = { viewModel.onGoToPrevStory() },
                         onGoToNextStory = onGoToNextStory,
                         isContinuous = isStoryContinuous,

@@ -57,6 +57,8 @@ fun Stories(
     onMove: () -> Unit,
     onMoveRelease: () -> Unit,
     onDragUp: () -> Unit,
+    onDragDown: (Float) -> Unit,
+    onDragDownRelease: () -> Unit,
     onGoToPrevStory: () -> Unit,
     onGoToNextStory: () -> Unit,
     isContinuous: Boolean,
@@ -114,6 +116,8 @@ fun Stories(
             onMove = onMove,
             onMoveRelease = onMoveRelease,
             onDragUp = onDragUp,
+            onDragDown = onDragDown,
+            onDragDownRelease = onDragDownRelease,
             onTransformation = { transformedZoom, transformedOffset ->
                 zoom = transformedZoom
                 offset = transformedOffset
