@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.outlined.MapsUgc
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.Icon
@@ -42,6 +43,8 @@ fun Tail(
     message: String,
     isLiked: Boolean,
     onLike: () -> Unit,
+    isCommentingAllowed: Boolean,
+    isSharingAllowed: Boolean,
 ) {
     Row(
         modifier = modifier,
@@ -92,15 +95,29 @@ fun Tail(
             tint = favoriteIconColor
         )
 
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.Send,
-            contentDescription = stringResource(R.string.instagram_story_send_story),
-            modifier = Modifier
-                .size(27.dp)
-                .offset(y = (-3).dp)
-                .rotate(-23f),
-            tint = Color.White
-        )
+        if (isCommentingAllowed) {
+            Icon(
+                imageVector = InstagramComment,
+                contentDescription = stringResource(R.string.instagram_story_send_story),
+                modifier = Modifier
+                    .size(27.dp)
+                    .offset(x = (-2).dp)
+                ,
+                tint = Color.White
+            )
+        }
+
+        if (isSharingAllowed) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.Send,
+                contentDescription = stringResource(R.string.instagram_story_send_story),
+                modifier = Modifier
+                    .size(27.dp)
+                    .offset(y = (-3).dp)
+                    .rotate(-23f),
+                tint = Color.White
+            )
+        }
     }
 }
 
@@ -112,6 +129,8 @@ private fun TailPreview() {
         onMessageEditing = {},
         message = "Hi there!",
         isLiked = isLiked,
-        onLike = { isLiked = !isLiked }
+        onLike = { isLiked = !isLiked },
+        isCommentingAllowed = true,
+        isSharingAllowed = true,
     )
 }

@@ -42,6 +42,8 @@ class UsersRepository {
                 isAccountOwner = true,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
+                isCommentingAllowed = false,
+                isSharingAllowed = false,
             ),
 
             InstagramUser(
@@ -50,6 +52,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
+                isCommentingAllowed = true,
+                isSharingAllowed = true,
             ),
             InstagramUser(
                 id = 3L,
@@ -57,6 +61,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = true,
+                isCommentingAllowed = true,
+                isSharingAllowed = true,
             ),
             InstagramUser(
                 id = 4L,
@@ -64,6 +70,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
+                isCommentingAllowed = true,
+                isSharingAllowed = false,
             ),
             InstagramUser(
                 id = 5L,
@@ -71,6 +79,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
+                isCommentingAllowed = false,
+                isSharingAllowed = true,
             ),
             InstagramUser(
                 id = 6L,
@@ -78,6 +88,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = true,
+                isCommentingAllowed = false,
+                isSharingAllowed = false,
             ),
             InstagramUser(
                 id = 7L,
@@ -85,6 +97,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
+                isCommentingAllowed = true,
+                isSharingAllowed = true,
             ),
             InstagramUser(
                 id = 8L,
@@ -92,6 +106,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
+                isCommentingAllowed = true,
+                isSharingAllowed = true,
             ),
             InstagramUser(
                 id = 9L,
@@ -99,6 +115,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
+                isCommentingAllowed = true,
+                isSharingAllowed = false,
             ),
             InstagramUser(
                 id = 10L,
@@ -106,6 +124,8 @@ class UsersRepository {
                 isAccountOwner = false,
                 avatarPreviewUrl = "https://picsum.photos/500",
                 isMuted = false,
+                isCommentingAllowed = false,
+                isSharingAllowed = true,
             ),
         )
     }

@@ -168,6 +168,8 @@ fun StoryScreen(
                     message = enteredMessage.text,
                     isLiked = state.activeStory.isLiked,
                     onLike = { viewModel.onStoryLiked(state.activeStoryId) },
+                    isCommentingAllowed = state.storyOwner.isCommentingAllowed,
+                    isSharingAllowed = state.storyOwner.isSharingAllowed,
                 )
             }
 
