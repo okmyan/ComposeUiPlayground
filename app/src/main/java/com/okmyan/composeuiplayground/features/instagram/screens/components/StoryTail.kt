@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.story.components
+package com.okmyan.composeuiplayground.features.instagram.screens.components
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material.icons.outlined.MapsUgc
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.Icon
@@ -27,17 +26,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.okmyan.composeuiplayground.R
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.icons.InstagramComment
+import com.okmyan.composeuiplayground.utils.extensions.hapticNoRippleClickable
 
 @Composable
-fun Tail(
+fun StoryTail(
     modifier: Modifier = Modifier,
     onMessageEditing: () -> Unit,
     message: String,
@@ -73,8 +72,6 @@ fun Tail(
             )
         }
 
-        val haptics = LocalHapticFeedback.current
-
         val favoriteIcon = if (isLiked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder
         val favoriteIconContentDescriptionId =
             if (isLiked) R.string.instagram_story_favorite_unlike else R.string.instagram_story_favorite_like
@@ -86,12 +83,10 @@ fun Tail(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .clickable(onClick = {
-                    if (!isLiked) {
-                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                    }
-                    onLike()
-                }),
+                .hapticNoRippleClickable(
+                    isHapticFeedbackEnabled = !isLiked,
+                    onClick = onLike,
+                ),
             tint = favoriteIconColor
         )
 
@@ -101,8 +96,7 @@ fun Tail(
                 contentDescription = stringResource(R.string.instagram_story_send_story),
                 modifier = Modifier
                     .size(27.dp)
-                    .offset(x = (-2).dp)
-                ,
+                    .offset(x = (-2).dp),
                 tint = Color.White
             )
         }
@@ -123,9 +117,9 @@ fun Tail(
 
 @Preview(showBackground = true, backgroundColor = 0xFF252424)
 @Composable
-private fun TailPreview() {
+private fun StoryTailPreview() {
     var isLiked by remember { mutableStateOf(false) }
-    Tail(
+    StoryTail(
         onMessageEditing = {},
         message = "Hi there!",
         isLiked = isLiked,

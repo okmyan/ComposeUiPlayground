@@ -22,8 +22,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.okmyan.composeuiplayground.features.instagram.screens.accountownerstory.components.AccountOwnerStoryBottomSheet
-import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Header
-import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Stories
+import com.okmyan.composeuiplayground.features.instagram.screens.components.Stories
+import com.okmyan.composeuiplayground.features.instagram.screens.components.StoryHeader
 import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_THRESHOLD
 import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_TRANSITION_Y_RATIO
 import com.okmyan.composeuiplayground.features.instagram.utils.DRAG_DOWN_ZOOM_RATIO
@@ -149,7 +149,7 @@ fun AccountOwnerStoryScreen(
                         onStoryOpened = viewModel::onStorySeen,
                         onStoryEnded = onGoToNextStory,
                     )
-                    Header(
+                    StoryHeader(
                         modifier = Modifier.padding(
                             horizontal = 10.dp,
                             vertical = 20.dp
@@ -157,6 +157,7 @@ fun AccountOwnerStoryScreen(
                         user = state.storyOwner,
                         activeStory = state.activeStory,
                         onOptionsClick = { showOptionsBottomSheet = true },
+                        onClosedFriendsLabelClicked = {},
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
                     )

@@ -22,10 +22,13 @@ class ObserveFeedStoriesUseCase(
                     val userStories = storiesByUser[user.id] ?: return@mapNotNull null
 
                     val hasNonSeenStories = userStories.any { !it.isSeen }
+                    val hasNonSeenStoriesForClosedFriendsOnly =
+                        userStories.any { !it.isSeen && it.isForClosedFriendsOnly }
 
                     FeedStory(
                         storyOwner = user,
                         hasNonSeenStories = hasNonSeenStories,
+                        hasNonSeenStoriesForClosedFriendsOnly = hasNonSeenStoriesForClosedFriendsOnly,
                     )
                 }
             }

@@ -21,13 +21,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.okmyan.composeuiplayground.features.instagram.screens.components.Stories
+import com.okmyan.composeuiplayground.features.instagram.screens.components.StoryHeader
+import com.okmyan.composeuiplayground.features.instagram.screens.components.StoryTail
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.BlackoutStory
-import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Header
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.MessageTextField
-import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Stories
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.StoryBottomSheet
 import com.okmyan.composeuiplayground.features.instagram.screens.story.components.StoryNotificationPopup
-import com.okmyan.composeuiplayground.features.instagram.screens.story.components.Tail
 import com.okmyan.composeuiplayground.features.instagram.utils.HIDE_STORY_ELEMENTS_DELAY
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
@@ -148,28 +148,29 @@ fun StoryScreen(
                         onStoryOpened = viewModel::onStorySeen,
                         onStoryEnded = onGoToNextStory,
                     )
-                    Header(
+                    StoryHeader(
                         modifier = Modifier
                             .padding(horizontal = 10.dp, vertical = 20.dp)
                             .alpha(storyElementsAlpha),
                         user = state.storyOwner,
                         activeStory = state.activeStory,
                         onOptionsClick = { showOptionsBottomSheet = true },
+                        onClosedFriendsLabelClicked = {},
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
                         isPageActive = isPageActive,
                     )
                 }
 
-                Tail(
+                StoryTail(
                     modifier = messageFieldModifier
                         .alpha(storyElementsAlpha),
                     onMessageEditing = { isMessageEditing = true },
                     message = enteredMessage.text,
                     isLiked = state.activeStory.isLiked,
                     onLike = { viewModel.onStoryLiked(state.activeStoryId) },
-                    isCommentingAllowed = state.storyOwner.isCommentingAllowed,
-                    isSharingAllowed = state.storyOwner.isSharingAllowed,
+                    isCommentingAllowed = state.isCommentingOnActiveStoryAllowed,
+                    isSharingAllowed = state.isSharingOnActiveStoryAllowed,
                 )
             }
 

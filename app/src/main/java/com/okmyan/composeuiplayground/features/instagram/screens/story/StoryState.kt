@@ -25,4 +25,10 @@ data class StoryState(
 
     val isActiveStoryLastOne: Boolean
         get() = activeStoryIndex == stories.size - 1
+
+    val isCommentingOnActiveStoryAllowed: Boolean
+        get() = storyOwner.isCommentingAllowed && !activeStory.isForClosedFriendsOnly
+
+    val isSharingOnActiveStoryAllowed: Boolean
+        get() = storyOwner.isSharingAllowed && !activeStory.isForClosedFriendsOnly
 }

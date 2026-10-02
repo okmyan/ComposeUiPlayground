@@ -1,13 +1,20 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.story.components
+package com.okmyan.composeuiplayground.features.instagram.screens.components
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,11 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.CachePolicy
@@ -28,12 +34,15 @@ import coil3.size.Precision
 import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramStory
 import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramUser
+import com.okmyan.composeuiplayground.features.instagram.screens.story.components.icons.InstagramMenu
+import com.okmyan.composeuiplayground.utils.extensions.hapticNoRippleClickable
 
 @Composable
-fun Header(
+fun StoryHeader(
     modifier: Modifier = Modifier,
     user: InstagramUser,
     activeStory: InstagramStory,
+    onClosedFriendsLabelClicked: () -> Unit,
     onOptionsClick: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -64,17 +73,23 @@ fun Header(
 
             Text(text = activeStory.publishedAt)
         }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (activeStory.isForClosedFriendsOnly) {
+                CloseFriendsLabel(onClick = onClosedFriendsLabelClicked)
+            }
 
-        val haptics = LocalHapticFeedback.current
-        Icon(
-            imageVector = InstagramMenu,
-            contentDescription = stringResource(R.string.instagram_story_options),
-            modifier = Modifier.clickable(onClick = {
-                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                onOptionsClick()
-            }),
-            tint = Color.White
-        )
+            Icon(
+                imageVector = InstagramMenu,
+                contentDescription = stringResource(R.string.instagram_story_options),
+                modifier = Modifier.hapticNoRippleClickable(onClick = {
+                    onOptionsClick()
+                }),
+                tint = Color.White
+            )
+        }
     }
 }
 
@@ -116,4 +131,39 @@ fun Avatar(
                 .clip(CircleShape)
         )
     }
+}
+
+@Composable
+fun CloseFriendsLabel(
+    onClick: () -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy((-2).dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .background(Color(0xFF1BD163))
+            .padding(horizontal = 5.dp, vertical = 2.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Star,
+            contentDescription = stringResource(R.string.instagram_story_closed_friends),
+            tint = Color.White
+        )
+        Icon(
+            imageVector = Icons.Rounded.ExpandMore,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier
+                .size(18.dp)
+                .offset(y = (-0.5).dp)
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun CloseFriendsLabelPreview() {
+    CloseFriendsLabel(onClick = {})
 }

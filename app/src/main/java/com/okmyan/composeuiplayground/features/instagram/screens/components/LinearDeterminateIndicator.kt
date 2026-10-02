@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.story.components
+package com.okmyan.composeuiplayground.features.instagram.screens.components
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.LinearProgressIndicator

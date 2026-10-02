@@ -35,6 +35,7 @@ import com.okmyan.composeuiplayground.ui.theme.PurpleGrey40
 fun AvatarCircle(
     user: InstagramUser,
     hasNonSeenStories: Boolean,
+    hasNonSeenStoriesForClosedFriendsOnly: Boolean,
     onClick: () -> Unit,
     onAddStory: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
@@ -44,13 +45,17 @@ fun AvatarCircle(
         with(sharedTransitionScope) {
             Box {
                 val brush = if (hasNonSeenStories) {
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFFCAF45), Color(0xFFF77737), Color(0xFFF56040),
-                            Color(0xFFFD1D1D), Color(0xFFE1306C), Color(0xFFC13584),
-                            Color(0xFF833AB4),
+                    if (hasNonSeenStoriesForClosedFriendsOnly) {
+                        SolidColor(Color(0xFF1BD163))
+                    } else {
+                        Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFFCAF45), Color(0xFFF77737), Color(0xFFF56040),
+                                Color(0xFFFD1D1D), Color(0xFFE1306C), Color(0xFFC13584),
+                                Color(0xFF833AB4),
+                            )
                         )
-                    )
+                    }
                 } else {
                     SolidColor(Color(0xFF494949))
                 }

@@ -29,6 +29,7 @@ fun FeedStory(
         AvatarCircle(
             user = feedStory.storyOwner,
             hasNonSeenStories = feedStory.hasNonSeenStories,
+            hasNonSeenStoriesForClosedFriendsOnly = feedStory.hasNonSeenStoriesForClosedFriendsOnly,
             onClick = onClick,
             onAddStory = onAddStory,
             sharedTransitionScope = sharedTransitionScope,

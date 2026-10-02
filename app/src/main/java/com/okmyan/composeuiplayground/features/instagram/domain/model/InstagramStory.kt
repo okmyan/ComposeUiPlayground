@@ -1,8 +1,5 @@
 package com.okmyan.composeuiplayground.features.instagram.domain.model
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class InstagramStory(
     val id: Long,
     val userId: Long,
@@ -10,4 +7,5 @@ data class InstagramStory(
     val publishedAt: String,
     val isSeen: Boolean,
     val isLiked: Boolean,
+    val isForClosedFriendsOnly: Boolean,
 )

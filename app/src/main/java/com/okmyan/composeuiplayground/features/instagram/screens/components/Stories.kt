@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.story.components
+package com.okmyan.composeuiplayground.features.instagram.screens.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +41,6 @@ import coil3.request.ImageRequest
 import coil3.size.Precision
 import com.okmyan.composeuiplayground.R
 import com.okmyan.composeuiplayground.features.instagram.domain.model.InstagramStory
-import com.okmyan.composeuiplayground.features.instagram.screens.components.PreloadStory
 import com.okmyan.composeuiplayground.utils.extensions.mirror
 import kotlinx.collections.immutable.ImmutableList
 

@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.story.components
+package com.okmyan.composeuiplayground.features.instagram.screens.components
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown

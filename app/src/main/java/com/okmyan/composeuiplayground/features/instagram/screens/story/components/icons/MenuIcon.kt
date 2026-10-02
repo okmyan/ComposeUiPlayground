@@ -1,4 +1,4 @@
-package com.okmyan.composeuiplayground.features.instagram.screens.story.components
+package com.okmyan.composeuiplayground.features.instagram.screens.story.components.icons
 
 import androidx.compose.material.icons.materialIcon
 import androidx.compose.material.icons.materialPath
